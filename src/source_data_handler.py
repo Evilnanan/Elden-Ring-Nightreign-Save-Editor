@@ -119,9 +119,8 @@ class SourceDataHandler:
         ]
         self.relic_table.set_index("ID", inplace=True)
 
-        self.antique_stand_param = \
+        self.antique_stand_param: pd.DataFrame = \
             pd.read_csv(self.PARAM_DIR / "AntiqueStandParam.csv")
-        self.antique_stand_param: pd.DataFrame = self.antique_stand_param
 
         self.relic_name: Optional[pd.DataFrame] = None
         self.effect_name: Optional[pd.DataFrame] = None
@@ -568,6 +567,15 @@ class SourceDataHandler:
         return self.npc_name[self.npc_name["id"] == character_id]["text"].values[0]
 
     def get_vessel_data(self, vessel_id: int):
+        """
+        Get vessel data by vessel ID.
+        
+        :param vessel_id: vessel ID to get data for
+        :type vessel_id: int
+        :return: Vessel data as a dictionary
+        :rtype: dict
+            keys: Name, Character, Colors, unlockFlag, hero_type
+        """
         if self.antique_stand_param is None:
             return None
         _vessel_data = self.antique_stand_param[self.antique_stand_param["ID"] == vessel_id][
@@ -589,7 +597,8 @@ class SourceDataHandler:
                         COLOR_MAP[_vessel_data["deepRelicSlot2"].values[0]],
                         COLOR_MAP[_vessel_data["deepRelicSlot3"].values[0]]
                         ),
-                   "unlockFlag": _unlock_flag
+                   "unlockFlag": _unlock_flag,
+                   "hero_type": _hero_type
                    }
         return _result
 
