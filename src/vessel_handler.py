@@ -7,7 +7,7 @@ import time
 def get_now_timestamp():
     EPOCH_OFFSET = 11644473600
     now_unix = time.time()
-    filetime_long = int((now_unix + EPOCH_OFFSET) * 10000000)
+    filetime_long = int((now_unix + EPOCH_OFFSET) * 1000) * 10000
     return filetime_long
 
 
@@ -21,14 +21,14 @@ class HeroLoadout:
         # Stores offsets for hero-level fields
         self.offsets = offsets
 
-    def add_preset(self, idx, name, vessel_id, relics, offset_dict, counter_val, timestamp):
+    def add_preset(self, index, name, vessel_id, relics, offsets, counter, timestamp):
         self.presets.append({
             "index": index,
             "name": name,
             "vessel_id": vessel_id,
             "relics": relics,
-            "offsets": offset_dict,
-            "counter": counter_val,
+            "offsets": offsets,
+            "counter": counter,
             "timestamp": timestamp
         })
 
@@ -157,7 +157,7 @@ class VesselParser:
             cursor += 8
             
             if h_id in heroes:
-                heroes[h_id].add_preset(preset_index, name, v_id, relics, p_offsets, counter_val)
+                heroes[h_id].add_preset(preset_index, name, v_id, relics, p_offsets, counter_val, timestamp)
                 
             preset_index += 1
             
