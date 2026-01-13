@@ -3977,6 +3977,7 @@ class SaveEditorGUI:
         murks, sigs = read_murks_and_sigs(data)
         self.murks_display.config(text=str(murks))
         self.sigs_display.config(text=str(sigs))
+        loadout_handler.reload_data(data, False)
     
     def modify_murks(self):
         if data is None:
