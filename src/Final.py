@@ -5,17 +5,19 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, simpledialog
 from pathlib import Path
 # openpyxl is lazy-loaded in export/import functions to speed up startup
-from relic_checker import RelicChecker, InvalidReason, is_curse_invalid
-from source_data_handler import SourceDataHandler, get_system_language, CHARACTER_NAMES
-from vessel_handler import LoadoutHandler
 from typing import Optional
 import sys
+# project modules
+from basic_class import Item
+from globals import (CHARACTER_NAMES, ITEM_TYPE_RELIC, WORKING_DIR)
+
+from relic_checker import RelicChecker, InvalidReason, is_curse_invalid
+from source_data_handler import SourceDataHandler, get_system_language
+from vessel_handler import LoadoutHandler
 
 
 # Global variables
-working_directory = os.path.dirname(os.path.abspath(__file__))
-working_directory = Path(working_directory)
-os.chdir(working_directory)
+os.chdir(WORKING_DIR)
 
 # Data storage - SourceDataHandler and LoadoutHandler are lazy-initialized to speed up startup
 data_source: Optional[SourceDataHandler] = None
@@ -165,12 +167,6 @@ def get_vessel_info(char_name, vessel_slot):
 
     return {'name': f"Vessel {vessel_slot}", 'unlockFlag': 0}
 
-# Items type
-ITEM_TYPE_EMPTY = 0x00000000
-ITEM_TYPE_WEAPON = 0x80000000
-ITEM_TYPE_ARMOR = 0x90000000
-ITEM_TYPE_RELIC = 0xC0000000
-
 
 def load_json_data():
     global items_json, effects_json
@@ -198,84 +194,84 @@ def reload_language(language_code):
     return result
 
 
-class Item:
-    BASE_SIZE = 8
+# class Item:
+#     BASE_SIZE = 8
 
-    def __init__(self, gaitem_handle, item_id, effect_1, effect_2, effect_3,
-                 durability, unk_1, sec_effect1, sec_effect2, sec_effect3,
-                 unk_2, offset, extra=None, size=BASE_SIZE):
-        self.gaitem_handle = gaitem_handle
-        self.item_id = item_id
-        self.effect_1 = effect_1
-        self.effect_2 = effect_2
-        self.effect_3 = effect_3
-        self.durability = durability
-        self.unk_1 = unk_1
-        self.sec_effect1 = sec_effect1
-        self.sec_effect2 = sec_effect2
-        self.sec_effect3 = sec_effect3
-        self.unk_2 = unk_2
-        self.offset = offset
-        self.size = size
-        self.padding = extra or ()
+#     def __init__(self, gaitem_handle, item_id, effect_1, effect_2, effect_3,
+#                  durability, unk_1, sec_effect1, sec_effect2, sec_effect3,
+#                  unk_2, offset, extra=None, size=BASE_SIZE):
+#         self.gaitem_handle = gaitem_handle
+#         self.item_id = item_id
+#         self.effect_1 = effect_1
+#         self.effect_2 = effect_2
+#         self.effect_3 = effect_3
+#         self.durability = durability
+#         self.unk_1 = unk_1
+#         self.sec_effect1 = sec_effect1
+#         self.sec_effect2 = sec_effect2
+#         self.sec_effect3 = sec_effect3
+#         self.unk_2 = unk_2
+#         self.offset = offset
+#         self.size = size
+#         self.padding = extra or ()
 
-    @classmethod
-    def from_bytes(cls, data_type, offset=0):
-        data_len = len(data_type)
+#     @classmethod
+#     def from_bytes(cls, data_type, offset=0):
+#         data_len = len(data_type)
 
-        # Check if we have enough data for the base read
-        if offset + cls.BASE_SIZE > data_len:
-            # Return empty item if not enough data
-            return cls(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, offset, size=cls.BASE_SIZE)
+#         # Check if we have enough data for the base read
+#         if offset + cls.BASE_SIZE > data_len:
+#             # Return empty item if not enough data
+#             return cls(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, offset, size=cls.BASE_SIZE)
 
-        gaitem_handle, item_id = struct.unpack_from("<II", data_type, offset)
-        type_bits = gaitem_handle & 0xF0000000
-        cursor = offset + cls.BASE_SIZE
-        size = cls.BASE_SIZE
+#         gaitem_handle, item_id = struct.unpack_from("<II", data_type, offset)
+#         type_bits = gaitem_handle & 0xF0000000
+#         cursor = offset + cls.BASE_SIZE
+#         size = cls.BASE_SIZE
 
-        durability = unk_1 = unk_2 = 0
-        effect_1 = effect_2 = effect_3 = 0
-        sec_effect1 = sec_effect2 = sec_effect3 = 0
-        padding = ()
+#         durability = unk_1 = unk_2 = 0
+#         effect_1 = effect_2 = effect_3 = 0
+#         sec_effect1 = sec_effect2 = sec_effect3 = 0
+#         padding = ()
 
-        if gaitem_handle != 0:
-            if type_bits == ITEM_TYPE_WEAPON:
-                cursor += 80
-                size = cursor - offset
-            elif type_bits == ITEM_TYPE_ARMOR:
-                cursor += 8
-                size = cursor - offset
-            elif type_bits == ITEM_TYPE_RELIC:
-                # Check bounds before each read to handle corrupted/truncated saves
-                if cursor + 8 > data_len:
-                    return cls(gaitem_handle, item_id, 0, 0, 0, 0, 0, 0, 0, 0, 0, offset, size=cls.BASE_SIZE)
-                durability, unk_1 = struct.unpack_from("<II", data_type, cursor)
-                cursor += 8
+#         if gaitem_handle != 0:
+#             if type_bits == ITEM_TYPE_WEAPON:
+#                 cursor += 80
+#                 size = cursor - offset
+#             elif type_bits == ITEM_TYPE_ARMOR:
+#                 cursor += 8
+#                 size = cursor - offset
+#             elif type_bits == ITEM_TYPE_RELIC:
+#                 # Check bounds before each read to handle corrupted/truncated saves
+#                 if cursor + 8 > data_len:
+#                     return cls(gaitem_handle, item_id, 0, 0, 0, 0, 0, 0, 0, 0, 0, offset, size=cls.BASE_SIZE)
+#                 durability, unk_1 = struct.unpack_from("<II", data_type, cursor)
+#                 cursor += 8
 
-                if cursor + 12 > data_len:
-                    return cls(gaitem_handle, item_id, 0, 0, 0, durability, unk_1, 0, 0, 0, 0, offset, size=cursor-offset)
-                effect_1, effect_2, effect_3 = struct.unpack_from("<III", data_type, cursor)
-                cursor += 12
+#                 if cursor + 12 > data_len:
+#                     return cls(gaitem_handle, item_id, 0, 0, 0, durability, unk_1, 0, 0, 0, 0, offset, size=cursor-offset)
+#                 effect_1, effect_2, effect_3 = struct.unpack_from("<III", data_type, cursor)
+#                 cursor += 12
 
-                if cursor + 0x1C > data_len:
-                    return cls(gaitem_handle, item_id, effect_1, effect_2, effect_3, durability, unk_1, 0, 0, 0, 0, offset, size=cursor-offset)
-                padding = struct.unpack_from("<7I", data_type, cursor)
-                cursor += 0x1C
+#                 if cursor + 0x1C > data_len:
+#                     return cls(gaitem_handle, item_id, effect_1, effect_2, effect_3, durability, unk_1, 0, 0, 0, 0, offset, size=cursor-offset)
+#                 padding = struct.unpack_from("<7I", data_type, cursor)
+#                 cursor += 0x1C
 
-                if cursor + 12 > data_len:
-                    return cls(gaitem_handle, item_id, effect_1, effect_2, effect_3, durability, unk_1, 0, 0, 0, 0, offset, extra=padding, size=cursor-offset)
-                sec_effect1, sec_effect2, sec_effect3 = struct.unpack_from("<III", data_type, cursor)
-                cursor += 12
+#                 if cursor + 12 > data_len:
+#                     return cls(gaitem_handle, item_id, effect_1, effect_2, effect_3, durability, unk_1, 0, 0, 0, 0, offset, extra=padding, size=cursor-offset)
+#                 sec_effect1, sec_effect2, sec_effect3 = struct.unpack_from("<III", data_type, cursor)
+#                 cursor += 12
 
-                if cursor + 4 > data_len:
-                    return cls(gaitem_handle, item_id, effect_1, effect_2, effect_3, durability, unk_1, sec_effect1, sec_effect2, sec_effect3, 0, offset, extra=padding, size=cursor-offset)
-                unk_2 = struct.unpack_from("<I", data_type, cursor)[0]
-                cursor += 12
-                size = cursor - offset
+#                 if cursor + 4 > data_len:
+#                     return cls(gaitem_handle, item_id, effect_1, effect_2, effect_3, durability, unk_1, sec_effect1, sec_effect2, sec_effect3, 0, offset, extra=padding, size=cursor-offset)
+#                 unk_2 = struct.unpack_from("<I", data_type, cursor)[0]
+#                 cursor += 12
+#                 size = cursor - offset
 
-        return cls(gaitem_handle, item_id, effect_1, effect_2, effect_3,
-                   durability, unk_1, sec_effect1, sec_effect2, sec_effect3,
-                   unk_2, offset, extra=padding, size=size)
+#         return cls(gaitem_handle, item_id, effect_1, effect_2, effect_3,
+#                    durability, unk_1, sec_effect1, sec_effect2, sec_effect3,
+#                    unk_2, offset, extra=padding, size=size)
 
 
 def parse_items(data_type, start_offset, slot_count=5120):
@@ -963,7 +959,7 @@ def save_file():
 def name_to_path():
     global char_name_list, MODE
     char_name_list = []
-    unpacked_folder = working_directory / 'decrypted_output'
+    unpacked_folder = WORKING_DIR / 'decrypted_output'
 
     prefix = "userdata" if MODE == 'PS4' else "USERDATA_0"
 
@@ -998,7 +994,7 @@ def name_to_path():
 def name_to_path_import():
     global char_name_list_import, IMPORT_MODE
     char_name_list_import = []
-    unpacked_folder = working_directory / 'decrypted_output_import'
+    unpacked_folder = WORKING_DIR / 'decrypted_output_import'
     
     prefix = "userdata" if IMPORT_MODE == 'PS4' else "USERDATA_0"
     
@@ -2824,7 +2820,6 @@ class SaveEditorGUI:
 
         try:
             struct.pack_into('<I', data, relic_offset, new_ga_handle)
-            loadout_handler.reload_data(data)
             return True
         except Exception as e:
             messagebox.showerror("Error", f"Failed to write preset relic: {e}")
@@ -3324,15 +3319,9 @@ class SaveEditorGUI:
             # Get selected relic GA
             item = selection[0]
             new_ga = int(relic_tree.item(item, 'text'))
-            selected_ga_item = None
-            if new_ga != 0:
-                for r in ga_relic:
-                    if r.gaitem_handle == new_ga:
-                        selected_ga_item = r
-                        break
 
             # Perform replacement
-            success = self.replace_vessel_relic(char_name, vessel_slot, slot_index, selected_ga_item)
+            success = self.replace_vessel_relic(char_name, vessel_slot, slot_index, new_ga)
             if success:
                 dialog.destroy()
                 self.refresh_vessels()
@@ -3419,7 +3408,7 @@ class SaveEditorGUI:
         # Auto-size columns after populating
         autosize_treeview_columns(tree)
 
-    def replace_vessel_relic(self, char_name, vessel_slot, slot_index, new_item):
+    def replace_vessel_relic(self, char_name, vessel_slot, slot_index, new_ga):
         """Replace a relic in a vessel slot with a new one"""
         global data
 
@@ -3429,9 +3418,12 @@ class SaveEditorGUI:
             messagebox.showerror("Error", f"Unknown character: {char_name}")
             return False
         vessel_id = loadout_handler.get_vessel_id(hero_type, vessel_slot)
+        try:
+            loadout_handler.replace_vessel_relic(hero_type, vessel_id, slot_index, new_ga)
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to replace relic: {e}")
+            return False
 
-        data = loadout_handler.replace_vessel_relic(hero_type, vessel_id, slot_index, new_item)
-        
         return True
 
     def open_edit_relic_dialog(self, vessel_slot, slot_index):
@@ -3928,9 +3920,8 @@ class SaveEditorGUI:
             # Parse items
             gaprint(data)
 
-            # Parse vessel assignments (maps GA handles to character names)
-            # parse_vessel_assignments(data)
-            loadout_handler = LoadoutHandler(data, data_source)
+            # Parse Vessels and Presets
+            loadout_handler = LoadoutHandler(data, data_source, ga_relic)
             loadout_handler.parse()
 
             # Initialize Relic Checker (set_illegal_relics will be called by refresh_inventory)
@@ -3977,7 +3968,6 @@ class SaveEditorGUI:
         murks, sigs = read_murks_and_sigs(data)
         self.murks_display.config(text=str(murks))
         self.sigs_display.config(text=str(sigs))
-        loadout_handler.reload_data(data, False)
     
     def modify_murks(self):
         if data is None:
@@ -4029,6 +4019,7 @@ class SaveEditorGUI:
         # Re-parse vessel assignments
         # parse_vessel_assignments(data)
         loadout_handler.reload_data(data)
+        loadout_handler.reload_ga_relics(ga_relic)
 
         # Update relic checker with new ga_relic and recalculate illegal relics
         if relic_checker:
