@@ -9,7 +9,8 @@ from typing import Optional
 import sys
 # project modules
 from basic_class import Item
-from globals import (CHARACTER_NAMES, ITEM_TYPE_RELIC, WORKING_DIR)
+import globals
+from globals import (ITEM_TYPE_RELIC, WORKING_DIR)
 
 from relic_checker import RelicChecker, InvalidReason, is_curse_invalid
 from source_data_handler import SourceDataHandler, get_system_language
@@ -25,7 +26,6 @@ relic_checker: Optional[RelicChecker] = None
 loadout_handler: Optional[LoadoutHandler] = None
 items_json = {}
 effects_json = {}
-data = None
 userdata_path = None
 
 
@@ -135,7 +135,7 @@ def get_vessel_info(char_name, vessel_slot):
     # Characters 0-9 have vessels at IDs 1000-1006, 2000-2006, etc.
     # Shared vessels (slots 7-9) use IDs 19000-19002
     # Shared vessel slot 10 uses ID 19010
-    char_id = CHARACTER_NAMES.index(char_name) if char_name in CHARACTER_NAMES else -1
+    char_id = data_source.character_names.index(char_name) if char_name in data_source.character_names else -1
 
     if char_id < 0 or char_id >= 10:
         return {'name': f"Vessel {vessel_slot}"}
@@ -676,7 +676,7 @@ def get_character_loadout(char_name):
         Dict with vessel_slot -> {'relics': list of (ga_handle, relic_info), 'unlocked': bool}
     """
     
-    char_id = CHARACTER_NAMES.index(char_name) if char_name in CHARACTER_NAMES else -1
+    char_id = data_source.character_names.index(char_name) if char_name in data_source.character_names else -1
     if char_id < 0:
         return {}
     hero_type = char_id + 1
@@ -750,19 +750,19 @@ def read_murks_and_sigs(data):
 
 
 def write_murks_and_sigs(murks_value, sigs_value):
-    global data, loadout_handler
-    offset = gaprint(data)
+    global loadout_handler
+    offset = gaprint(globals.data)
     name_offset = offset + 0x94
     murks_offset = name_offset + 52
     sigs_offset = name_offset - 64
     
     # Write murks
     murks_bytes = murks_value.to_bytes(4, 'little')
-    data = data[:murks_offset] + murks_bytes + data[murks_offset+4:]
+    globals.data = globals.data[:murks_offset] + murks_bytes + globals.data[murks_offset+4:]
     
     # Write sigs
     sigs_bytes = sigs_value.to_bytes(4, 'little')
-    data = data[:sigs_offset] + sigs_bytes + data[sigs_offset+4:]
+    globals.data = globals.data[:sigs_offset] + sigs_bytes + globals.data[sigs_offset+4:]
     
     save_current_data()
 
@@ -801,7 +801,6 @@ def split_files(file_path, folder_name):
         decrypt_ds2_sl2(file_path)
 
 def save_file():
-    global data
     save_current_data()
 
     if MODE=='PC':
@@ -813,14 +812,14 @@ def save_file():
         encrypt_modified_files(output_sl2_file)
 
     if MODE == 'PS4':  ### HERE
-        print('data length', len(data))
+        print('data length', len(globals.data))
         
         # Validate data length before proceeding
         expected_length = 0x100004
-        if len(data) != expected_length:
+        if len(globals.data) != expected_length:
             messagebox.showerror('Error', 
                             f'Modified userdata size is invalid. '
-                            f'Expected {hex(expected_length)}, got {hex(len(data))}. Cannot save.')
+                            f'Expected {hex(expected_length)}, got {hex(len(globals.data))}. Cannot save.')
             return
         
         try:
@@ -1018,12 +1017,11 @@ def name_to_path_import():
 
 
 def delete_relic(ga_index, item_id):
-    global data
     
-    last_offset = gaprint(data)
+    last_offset = gaprint(globals.data)
     inventory_start = last_offset + 0x650
     inventory_end = inventory_start + 0xA7AB
-    inventory_data = data[inventory_start:inventory_start + inventory_end]
+    inventory_data = globals.data[inventory_start:inventory_start + inventory_end]
     
     ga_bytes = ga_index.to_bytes(4, byteorder='little')
     replacement = bytes.fromhex('00000000FFFFFFFF')
@@ -1035,12 +1033,12 @@ def delete_relic(ga_index, item_id):
             inventory_offset = inventory_data.find(ga_bytes)
             match = inventory_offset + inventory_start
             
-            data = data[:match] + b"\x00" * 14 + data[match+14:]
+            globals.data = globals.data[:match] + b"\x00" * 14 + globals.data[match+14:]
 
-            data = data[:offset] + data[offset+80:]
-            data = data[:offset] + replacement + data[offset:]
+            globals.data = globals.data[:offset] + globals.data[offset+80:]
+            globals.data = globals.data[:offset] + replacement + globals.data[offset:]
 
-            data = data[:-0x1C] + b'\x00' * 72 + data[-0x1C:]
+            globals.data = globals.data[:-0x1C] + b'\x00' * 72 + globals.data[-0x1C:]
             
             save_current_data()
             return True
@@ -1048,7 +1046,6 @@ def delete_relic(ga_index, item_id):
 
 
 def modify_relic(ga_index, item_id, new_effects, new_item_id=None):
-    global data
 
     for ga, id, e1, e2, e3, e4, e5, e6, offset, size in ga_relic:
         real_id = id - 2147483648
@@ -1060,7 +1057,7 @@ def modify_relic(ga_index, item_id, new_effects, new_item_id=None):
                 new_id_internal = new_item_id + 2147483648
                 item_id_offset = offset + 4  # Skip GA handle (4 bytes)
                 item_id_bytes = new_id_internal.to_bytes(4, byteorder='little')
-                data = data[:item_id_offset] + item_id_bytes + data[item_id_offset+4:]
+                globals.data = globals.data[:item_id_offset] + item_id_bytes + globals.data[item_id_offset+4:]
 
             # Modify effects in the relic data structure
             effect_offset = offset + 16  # Skip handle, id, durability, unk_1
@@ -1069,14 +1066,14 @@ def modify_relic(ga_index, item_id, new_effects, new_item_id=None):
             for i, eff in enumerate(new_effects[:3]):
                 eff_bytes = eff.to_bytes(4, byteorder='little')
                 pos = effect_offset + (i * 4)
-                data = data[:pos] + eff_bytes + data[pos+4:]
+                globals.data = globals.data[:pos] + eff_bytes + globals.data[pos+4:]
 
             # Write secondary effects
             sec_effect_offset = effect_offset + 12 + 0x1C  # Skip padding
             for i, eff in enumerate(new_effects[3:6]):
                 eff_bytes = eff.to_bytes(4, byteorder='little')
                 pos = sec_effect_offset + (i * 4)
-                data = data[:pos] + eff_bytes + data[pos+4:]
+                globals.data = globals.data[:pos] + eff_bytes + globals.data[pos+4:]
 
             save_current_data()
             return True
@@ -1085,7 +1082,6 @@ def modify_relic(ga_index, item_id, new_effects, new_item_id=None):
 
 def modify_relic_by_ga(ga_index, new_effects, new_item_id, sort_effects=True):
     """Modify a relic by GA handle only (doesn't require matching item_id)"""
-    global data
 
     for ga, id, e1, e2, e3, e4, e5, e6, offset, size in ga_relic:
         if ga_index == ga:
@@ -1097,7 +1093,7 @@ def modify_relic_by_ga(ga_index, new_effects, new_item_id, sort_effects=True):
             new_id_internal = new_item_id + 2147483648
             item_id_offset = offset + 4  # Skip GA handle (4 bytes)
             item_id_bytes = new_id_internal.to_bytes(4, byteorder='little')
-            data = data[:item_id_offset] + item_id_bytes + data[item_id_offset+4:]
+            globals.data = globals.data[:item_id_offset] + item_id_bytes + globals.data[item_id_offset+4:]
 
             # Modify effects in the relic data structure
             effect_offset = offset + 16  # Skip handle, id, durability, unk_1
@@ -1106,14 +1102,14 @@ def modify_relic_by_ga(ga_index, new_effects, new_item_id, sort_effects=True):
             for i, eff in enumerate(new_effects[:3]):
                 eff_bytes = eff.to_bytes(4, byteorder='little')
                 pos = effect_offset + (i * 4)
-                data = data[:pos] + eff_bytes + data[pos+4:]
+                globals.data = globals.data[:pos] + eff_bytes + globals.data[pos+4:]
 
             # Write secondary effects
             sec_effect_offset = effect_offset + 12 + 0x1C  # Skip padding
             for i, eff in enumerate(new_effects[3:6]):
                 eff_bytes = eff.to_bytes(4, byteorder='little')
                 pos = sec_effect_offset + (i * 4)
-                data = data[:pos] + eff_bytes + data[pos+4:]
+                globals.data = globals.data[:pos] + eff_bytes + globals.data[pos+4:]
 
             save_current_data()
             return True
@@ -1218,9 +1214,9 @@ def split_files_import(file_path, folder_name):
 
 def import_save():
     global imported_data
-    global char_name_list_import, data
+    global char_name_list_import
 
-    if data==None:
+    if globals.data==None:
         messagebox.showerror('Error', 'Please select a character to replace first')
         return
 
@@ -1258,7 +1254,7 @@ def load_imported_data_and_close(path, popup):
     popup.destroy()
 
 def load_imported_data(path):
-    global imported_data, data
+    global imported_data
 
     # Check if steam_id was found - required for import
     if steam_id is None:
@@ -1282,11 +1278,11 @@ def load_imported_data(path):
     imported_data = imported_data[:offset] + bytes.fromhex(steam_id) + imported_data[offset + 8:]
 
 
-    if len(imported_data) <= len(data):
-        data = imported_data + data[len(imported_data):]
+    if len(imported_data) <= len(globals.data):
+        globals.data = imported_data + globals.data[len(imported_data):]
 
     else:
-        data = imported_data[:len(data)]
+        globals.data = imported_data[:len(globals.data)]
 
     for name, file in char_name_list_import:
         if path == file:
@@ -1390,7 +1386,7 @@ def import_relics_from_excel(filepath):
     # Lazy import openpyxl only when needed
     from openpyxl import load_workbook
 
-    global data, ga_relic
+    global ga_relic
 
     if not ga_relic:
         return False, "No relics loaded in current save"
@@ -1433,7 +1429,7 @@ def import_relics_from_excel(filepath):
                 # Write new item ID
                 item_id_offset = offset + 4  # Skip GA handle
                 item_id_bytes = new_item_id_internal.to_bytes(4, byteorder='little')
-                data = data[:item_id_offset] + item_id_bytes + data[item_id_offset+4:]
+                globals.data = globals.data[:item_id_offset] + item_id_bytes + globals.data[item_id_offset+4:]
             
             # Update effects
             new_effects = [new_e1, new_e2, new_e3, new_se1, new_se2, new_se3]
@@ -1449,7 +1445,6 @@ def import_relics_from_excel(filepath):
 
 def delete_all_illegal_relics():
     """Delete all relics with illegal effects"""
-    global data
     
     illegal_gas = check_illegal_relics()
     
@@ -1477,11 +1472,11 @@ def delete_all_illegal_relics():
 
 
 def save_current_data():
-    global data, userdata_path, loadout_handler
-    if data and userdata_path:
+    global userdata_path, loadout_handler
+    if globals.data and userdata_path:
         with open(userdata_path, 'wb') as f:
 
-            f.write(data)
+            f.write(globals.data)
 
 def aob_to_pattern(aob: str):
 
@@ -1631,6 +1626,7 @@ class SearchableCombobox(ttk.Frame):
 class SaveEditorGUI:
     def __init__(self, root):
         global loadout_handler
+        _ensure_data_source()
         self.root = root
         self.root.title("Elden Ring NightReign Save Editor")
         self.root.geometry("1000x700")
@@ -1777,7 +1773,7 @@ class SaveEditorGUI:
         # Character selector
         ttk.Label(controls_frame, text="Character:").pack(side='left', padx=(20, 5))
         # Only show the 10 real playable characters in the dropdown (not internal parsing names)
-        playable_characters = CHARACTER_NAMES[:10]
+        playable_characters = data_source.character_names[:10]
         self.vessel_char_var = tk.StringVar(value=playable_characters[0])
         self.vessel_char_combo = ttk.Combobox(controls_frame, textvariable=self.vessel_char_var,
                                                values=playable_characters, state="readonly", width=12)
@@ -1922,7 +1918,7 @@ class SaveEditorGUI:
 
     def refresh_vessels(self):
         """Refresh the vessels display for the selected character"""
-        if data is None:
+        if globals.data is None:
             return
         
         self.update_vessel_tab_comboboxes()
@@ -2059,7 +2055,7 @@ class SaveEditorGUI:
         self.preset_data_map = {}
 
         char_name = self.vessel_char_var.get()
-        char_id = CHARACTER_NAMES.index(char_name) if char_name in CHARACTER_NAMES else -1
+        char_id = data_source.character_names.index(char_name) if char_name in data_source.character_names else -1
         hero_type = char_id + 1
         if char_id == -1:
             return
@@ -2833,8 +2829,7 @@ class SaveEditorGUI:
 
     def write_preset_relic(self, preset_offset, slot_idx, new_ga_handle):
         """Write a relic GA handle to a preset slot in the save file"""
-        global data
-        if data is None:
+        if globals.data is None:
             return False
 
         # Preset structure: [vessel_id (4 bytes)] [6 GA handles (4 bytes each)]
@@ -2842,7 +2837,7 @@ class SaveEditorGUI:
         relic_offset = preset_offset['relics'] + (slot_idx * 4)
 
         try:
-            struct.pack_into('<I', data, relic_offset, new_ga_handle)
+            struct.pack_into('<I', globals.data, relic_offset, new_ga_handle)
             return True
         except Exception as e:
             messagebox.showerror("Error", f"Failed to write preset relic: {e}")
@@ -3433,9 +3428,8 @@ class SaveEditorGUI:
 
     def replace_vessel_relic(self, char_name, vessel_slot, slot_index, new_ga):
         """Replace a relic in a vessel slot with a new one"""
-        global data
 
-        char_id = CHARACTER_NAMES.index(char_name) if char_name in CHARACTER_NAMES else -1
+        char_id = data_source.character_names.index(char_name) if char_name in data_source.character_names else -1
         hero_type = char_id + 1
         if char_id < 0:
             messagebox.showerror("Error", f"Unknown character: {char_name}")
@@ -3452,7 +3446,7 @@ class SaveEditorGUI:
     def open_edit_relic_dialog(self, vessel_slot, slot_index):
         """Open dialog to edit a relic's effects from the vessel page"""
         char_name = self.vessel_char_var.get()
-        char_id = CHARACTER_NAMES.index(char_name) if char_name in CHARACTER_NAMES else -1
+        char_id = data_source.character_names.index(char_name) if char_name in data_source.character_names else -1
         hero_type = char_id + 1
         if char_id < 0:
             messagebox.showerror("Error", f"Unknown character: {char_name}")
@@ -3488,7 +3482,7 @@ class SaveEditorGUI:
     def copy_vessel_relic_effects(self, vessel_slot, slot_index):
         """Copy effects from a relic in a vessel slot to clipboard"""
         char_name = self.vessel_char_var.get()
-        char_id = CHARACTER_NAMES.index(char_name) if char_name in CHARACTER_NAMES else -1
+        char_id = data_source.character_names.index(char_name) if char_name in data_source.character_names else -1
         hero_type = char_id + 1
         if char_id < 0:
             messagebox.showerror("Error", f"Unknown character: {char_name}")
@@ -3517,7 +3511,7 @@ class SaveEditorGUI:
 
     def save_loadout(self):
         """Save the current character's loadout to a JSON file"""
-        if data is None:
+        if globals.data is None:
             messagebox.showwarning("Warning", "No character loaded")
             return
 
@@ -3568,7 +3562,7 @@ class SaveEditorGUI:
 
     def load_loadout(self):
         """Load a loadout from a JSON file and apply it"""
-        if data is None:
+        if globals.data is None:
             messagebox.showwarning("Warning", "No character loaded")
             return
 
@@ -3661,7 +3655,7 @@ class SaveEditorGUI:
         # Character filter dropdown
         ttk.Label(search_frame, text="👤 Char:").pack(side='left', padx=(10, 2))
         self.char_filter_var = tk.StringVar(value="All")
-        char_options = ["All"] + CHARACTER_NAMES
+        char_options = ["All"] + data_source.character_names
         self.char_filter_combo = ttk.Combobox(search_frame, textvariable=self.char_filter_var,
                                                values=char_options, state="readonly", width=10)
         self.char_filter_combo.pack(side='left', padx=2)
@@ -3806,13 +3800,13 @@ class SaveEditorGUI:
     def update_vessel_tab_comboboxes(self):
         # Reload Vessel Character ComboBox Names
         vessel_char_combobox_idx = self.vessel_char_combo.current()
-        self.vessel_char_combo['values'] = CHARACTER_NAMES
-        self.vessel_char_var.set(CHARACTER_NAMES[vessel_char_combobox_idx])
+        self.vessel_char_combo['values'] = data_source.character_names
+        self.vessel_char_var.set(data_source.character_names[vessel_char_combobox_idx])
         
     def update_inventory_comboboxes(self):
         # Reload Inventory Character Filter ComboBox Names
         filter_combo_idx = self.char_filter_combo.current()
-        self.char_filter_combo['values'] = ["All"] + CHARACTER_NAMES
+        self.char_filter_combo['values'] = ["All"] + data_source.character_names
         self.char_filter_var.set(self.char_filter_combo['values'][filter_combo_idx])
 
     def on_language_change(self, event=None):
@@ -3827,7 +3821,7 @@ class SaveEditorGUI:
             messagebox.showerror("Error", "Can't change language.")
 
     def open_file(self):
-        global MODE, data, userdata_path
+        global MODE, userdata_path
         
         file_path = filedialog.askopenfilename(
             title="Select Save File",
@@ -3933,18 +3927,19 @@ class SaveEditorGUI:
         self.load_character(path)
 
     def load_character(self, path):
-        global data, userdata_path, steam_id, data_source, ga_relic, relic_checker, loadout_handler
+        global userdata_path, steam_id, data_source, ga_relic, relic_checker, loadout_handler
         userdata_path = path
 
         try:
             with open(path, "rb") as f:
-                data = bytearray(f.read())  # Use bytearray for in-place modifications
+                globals.data = bytearray(f.read())  # Use bytearray for in-place modifications
 
             # Parse items
-            gaprint(data)
+            gaprint(globals.data)
 
             # Parse Vessels and Presets
-            loadout_handler = LoadoutHandler(data, data_source, ga_relic)
+            print(id(globals.data))
+            loadout_handler = LoadoutHandler(data_source, ga_relic)
             loadout_handler.parse()
 
             # Initialize Relic Checker (set_illegal_relics will be called by refresh_inventory)
@@ -3953,9 +3948,9 @@ class SaveEditorGUI:
             # NOTE: Don't call set_illegal_relics() here - refresh_inventory() will call it
 
             # Read stats
-            read_murks_and_sigs(data)
+            read_murks_and_sigs(globals.data)
 
-            steam_id = find_steam_id(data)
+            steam_id = find_steam_id(globals.data)
 
             # Refresh all tabs (refresh_inventory calls set_illegal_relics)
             self.refresh_inventory()
@@ -3985,15 +3980,15 @@ class SaveEditorGUI:
             messagebox.showerror("Error", f"Failed to load character: {str(e)}")
     
     def refresh_stats(self):
-        if data is None:
+        if globals.data is None:
             return
         
-        murks, sigs = read_murks_and_sigs(data)
+        murks, sigs = read_murks_and_sigs(globals.data)
         self.murks_display.config(text=str(murks))
         self.sigs_display.config(text=str(sigs))
     
     def modify_murks(self):
-        if data is None:
+        if globals.data is None:
             messagebox.showwarning("Warning", "No character loaded")
             return
 
@@ -4010,7 +4005,7 @@ class SaveEditorGUI:
             messagebox.showinfo("Success", "Murks updated successfully")
     
     def modify_sigs(self):
-        if data is None:
+        if globals.data is None:
             messagebox.showwarning("Warning", "No character loaded")
             return
         
@@ -4024,11 +4019,11 @@ class SaveEditorGUI:
             messagebox.showinfo("Success", "Sigs updated successfully")
     
     def refresh_inventory(self):
-        global data, ga_relic, relic_checker
+        global ga_relic, relic_checker
         
         self.update_inventory_comboboxes()
 
-        if data is None:
+        if globals.data is None:
             messagebox.showwarning("Warning", "No character loaded")
             return
 
@@ -4037,11 +4032,11 @@ class SaveEditorGUI:
             self.tree.delete(item)
 
         # Parse items - this updates ga_relic with current data
-        gaprint(data)
+        gaprint(globals.data)
 
         # Re-parse vessel assignments
         # parse_vessel_assignments(data)
-        loadout_handler.reload_data(data)
+        loadout_handler.parse()
         loadout_handler.reload_ga_relics(ga_relic)
         # loadout_handler.display_results()
 
@@ -4107,7 +4102,7 @@ class SaveEditorGUI:
 
             # Get character assignment (which characters have this relic equipped)
             equipped_by_hero_type = loadout_handler.relic_ga_hero_map.get(ga, [])
-            equipped_by = [CHARACTER_NAMES[h_t-1] for h_t in equipped_by_hero_type]
+            equipped_by = [data_source.character_names[h_t-1] for h_t in equipped_by_hero_type]
             equipped_by_str = ", ".join(equipped_by) if equipped_by else "-"
 
             # Check if this is a deep relic (ID range 2000000-2019999)
@@ -4595,9 +4590,9 @@ class SaveEditorGUI:
 
     def mass_fix_incorrect_ids(self):
         """Find and fix all problematic relics (illegal and strict invalid)"""
-        global data, userdata_path
+        global userdata_path
 
-        if data is None:
+        if globals.data is None:
             messagebox.showwarning("Warning", "No character loaded")
             return
 
@@ -4718,7 +4713,7 @@ class SaveEditorGUI:
         failed_count = 0
 
         for ga, id, old_id, new_id, old_name, new_name, new_effects, is_fallback in fixable_relics:
-            gaprint(data)
+            gaprint(globals.data)
             # Use sort_effects=True for fallback fixes (need sorting), False for strict fixes (already sorted)
             if modify_relic_by_ga(ga, new_effects, new_id, sort_effects=is_fallback):
                 fixed_count += 1
@@ -4728,7 +4723,7 @@ class SaveEditorGUI:
         # Reload data
         if userdata_path:
             with open(userdata_path, 'rb') as f:
-                data = f.read()
+                globals.data = f.read()
 
         # Show result
         message = f"Fixed {fixed_count} relic(s)"
@@ -4839,7 +4834,7 @@ class SaveEditorGUI:
 
     def export_relics(self):
         """Export relics to Excel file"""
-        if data is None:
+        if globals.data is None:
             messagebox.showwarning("Warning", "No character loaded")
             return
         
@@ -4861,7 +4856,7 @@ class SaveEditorGUI:
     
     def import_relics(self):
         """Import relics from Excel file"""
-        if data is None:
+        if globals.data is None:
             messagebox.showwarning("Warning", "No character loaded")
             return
         
@@ -4896,7 +4891,7 @@ class SaveEditorGUI:
     
     def delete_all_illegal(self):
         """Delete all relics with illegal effects"""
-        if data is None:
+        if globals.data is None:
             messagebox.showwarning("Warning", "No character loaded")
             return
         
@@ -4934,7 +4929,7 @@ class SaveEditorGUI:
         self.load_character(userdata_path)
     
     def save_changes(self):
-        if data and userdata_path:
+        if globals.data and userdata_path:
             save_file()
             messagebox.showinfo("Success", "Changes saved to file")
         else:
@@ -6002,7 +5997,7 @@ class ModifyRelicDialog:
 
         # Guard: Check if relic is assigned to a character or preset
         assigned_to_hero_type = loadout_handler.relic_ga_hero_map.get(self.ga_handle, [])
-        assigned_to = [CHARACTER_NAMES[h_t-1] for h_t in assigned_to_hero_type]
+        assigned_to = [data_source.character_names[h_t-1] for h_t in assigned_to_hero_type]
         if assigned_to:
             messagebox.showwarning(
                 "Cannot Change Color",

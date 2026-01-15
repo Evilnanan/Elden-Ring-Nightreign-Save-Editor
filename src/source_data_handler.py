@@ -64,6 +64,7 @@ class SourceDataHandler:
         "GoodsName.fmg.xml",
         "GoodsName_dlc01.fmg.xml",
     ]
+    character_names = CHARACTER_NAMES
 
     def __init__(self, language: str = "en_US"):
         self.effect_params = \
@@ -155,11 +156,10 @@ class SourceDataHandler:
             else:
                 _npc_names = pd.concat([_npc_names, _df])
 
-        global CHARACTER_NAMES
-        CHARACTER_NAMES.clear()
+        self.character_names.clear()
         for id in CHARACTER_NAME_ID:
             _name = _npc_names[_npc_names["id"] == id]["text"].to_list()[0]
-            CHARACTER_NAMES.append(_name)
+            self.character_names.append(_name)
 
         # Deal with Goods Names
         # Read all Goods xml from language subfolder

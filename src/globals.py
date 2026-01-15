@@ -4,6 +4,8 @@ import os
 
 # Global variables
 WORKING_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
+# In other modules, use globals.data instead of the data variable to avoid naming conflicts.
+data = None
 
 # Items type
 ITEM_TYPE_EMPTY = 0x00000000
