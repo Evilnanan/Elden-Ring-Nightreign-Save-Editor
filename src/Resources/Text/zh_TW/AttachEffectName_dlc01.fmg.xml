@@ -5,7 +5,7 @@
 <version>DarkSouls3</version>
 <bigendian>False</bigendian>
 <entries>
-<text id="6500800">【學者】對自己使用技藝時，能減少消耗的FP</text>
+<text id="6500800">【學者】對自己使用技藝時，能減少消耗的ＦＰ</text>
 <text id="6500900">【送葬者】發動絕活後，能再次使用技藝</text>
 <text id="6623200">出擊時，會持有「湧綠結晶露滴」</text>
 <text id="6647200">【學者】提升集中力，但降低生命力</text>
@@ -65,7 +65,7 @@
 <text id="8320500">提升近戰攻擊力</text>
 <text id="8320600">強化衝刺攻擊</text>
 <text id="8320700">強化翻滾攻擊</text>
-<text id="8360000">強化自然累積絕活量表</text>
+<text id="8360000">自然累積絕活量表＋</text>
 <text id="8880000">蓄力攻擊時，颳起冰風暴</text>
 <text id="8880200">蓄力攻擊時，噴灑黑焰</text>
 <text id="8880300">蓄力攻擊時，形成幻影進行攻擊</text>

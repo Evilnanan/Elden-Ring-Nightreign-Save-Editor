@@ -459,10 +459,12 @@
 <text id="7001000">Stabilità +1</text>
 <text id="7001001">Stabilità +2</text>
 <text id="7001002">Stabilità +3</text>
-<text id="7001400">Aumento attacco fisico</text>
+<text id="7001400">Aumento attacco fisico
+</text>
 <text id="7001401">Aumento attacco fisico +1</text>
 <text id="7001402">Aumento attacco fisico +2</text>
-<text id="7001403">Aumento attacco fisico +3</text>
+<text id="7001403">Aumento attacco fisico +3
+</text>
 <text id="7001500">Aumento potenza attacco magico</text>
 <text id="7001501">Aumento potenza attacco magico +1</text>
 <text id="7001502">Aumento potenza attacco magico +2</text>
@@ -509,8 +511,7 @@
 <text id="7010000">[Guardiano] Portata abilità personaggio migliorata</text>
 <text id="7010200">L'ampolla cura anche gli alleati</text>
 <text id="7010500">[Selvaggio] L'attivazione dell'arte genera fiamme nell'area</text>
-<text id="7010700">[Duchessa] Il successivo attacco di pugnale replica
-eventi sui nemici vicini</text>
+<text id="7010700">[Duchessa] Replica eventi sui nemici vicini dopo il colpo finale di attacchi concatenati con pugnale</text>
 <text id="7010800">[Predone] Aumento danni abilità personaggio, resistenza danni
 ridotta durante l'uso</text>
 <text id="7010900">[Rediviva] Attivando l'arte, cura totalmente gli alleati vicini
@@ -584,8 +585,7 @@ affinità raccolti</text>
 <text id="7034200">[Giustiziere] Con arte suprema attiva, aumenta la potenza d'attacco</text>
 <text id="7034300">[Giustiziere] Migliora gli effetti delle abilità, riduce
 la resistenza alle alterazioni di stato</text>
-<text id="7034400">[Giustiziere] L'abilità personaggio aumenta l'attacco,
-ma attaccare consuma PV</text>
+<text id="7034400">[Giustiziere] L'abilità personaggio aumenta l’attacco ma abbassa la resistenza danni mentre si attacca</text>
 <text id="7034500">[Giustiziere] Con abilità personaggio attiva, sbloccare
 la Spada maledetta ripristina PV</text>
 <text id="7034600">[Occhio di ferro] L'attivazione caricata di un'arte impone
@@ -997,7 +997,7 @@ a marcescenza scarlatta</text>
 <text id="8640500">Colpo critico fulmine permea armamento</text>
 <text id="8640600">Schegge di cristallo con colpo critico magico</text>
 <text id="8640700">Foschia velenosa con colpo critico veleno</text>
-<text id="8640800">Sanguinamento critico: Spine del supplizio</text>
+<text id="8640800">Sanguinamento crit.: Rovo del castigo</text>
 <text id="8640900">Colpo critico marcescenza genera filamenti marcescenti</text>
 <text id="8641000">Tormenta con colpo critico assideramento</text>
 <text id="8641100">Colpo critico follia genera Fiamma della frenesia</text>

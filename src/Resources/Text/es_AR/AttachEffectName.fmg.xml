@@ -456,10 +456,11 @@
 <text id="7001000">Aplomo +1</text>
 <text id="7001001">Aplomo +2</text>
 <text id="7001002">Aplomo +3</text>
-<text id="7001400">Aumento de ataque físico</text>
+<text id="7001400">Aumento de ataque físico.
+</text>
 <text id="7001401">Aumento de ataque físico +1</text>
 <text id="7001402">Aumento de ataque físico +2</text>
-<text id="7001403">Aumento de ataque físico +3
+<text id="7001403">Aumento de ataque físico +3.
 </text>
 <text id="7001500">Aumento de poder de ataque mágico</text>
 <text id="7001501">Aumento de poder de ataque mágico +1</text>
@@ -507,7 +508,7 @@
 <text id="7010000">[Guardián] Mejora el alcance de las habilidades de personaje</text>
 <text id="7010200">El frasco también cura a aliados</text>
 <text id="7010500">[El Salvaje] Activar artes incendia la zona</text>
-<text id="7010700">[Duquesa] El ataque sucesivo de la daga repite la acción en enemigos cercanos</text>
+<text id="7010700">[Duquesa] Al acertar el golpe final de un ataque en serie con una daga, repite la secuencia de eventos contra los enemigos cercanos.</text>
 <text id="7010800">[Pirata] Aumenta el daño de hab., pero se reduce la neutr. de daño a lo largo de su duración</text>
 <text id="7010900">[Retornada] Gasta PV propios para curar por completo a los aliados cercanos al activar artes</text>
 <text id="7011000">[Guardián] Aumenta la duración de habilidades de personaje</text>
@@ -561,7 +562,8 @@ al activar habilidades</text>
 <text id="7034100">[Ermitaña] Activar el arte suprema aumenta los PV máximos</text>
 <text id="7034200">[Verdugo] El poder de ataque aumenta mientras el arte suprema esté activa</text>
 <text id="7034300">[Verdugo] Mejora el efecto de las habilidades, pero reduce la resistencia a efectos de estado</text>
-<text id="7034400">[Verdugo] La habilidad de personaje aumenta el ataque, pero atacar consume PV</text>
+<text id="7034400">[Verdugo] Las habilidades de personaje mejoran el ataque,
+pero reducen la neutralización de daño al atacar.</text>
 <text id="7034500">[Verdugo] Si una habilidad de personaje está activa, desbloquear el uso de espadas malditas restaura PV</text>
 <text id="7034600">[Ojo de Hierro] Activar la carga de artes agrega efecto de veneno</text>
 <text id="7034700">[Ojo de Hierro] Mejora los contraataques con embestida tras usar un arte</text>
@@ -884,8 +886,7 @@ Paso ligero al empezar una expedición</text>
 <text id="8350200">Costo de PC de habilidades reducido</text>
 <text id="8350300">Activar habilidades mejora el aplomo</text>
 <text id="8350400">Los rechazos activan contraataques dorados</text>
-<text id="8360000">Acumulación más rápida del medidor de arte
-</text>
+<text id="8360000">Acumulación más rápida del medidor de arte</text>
 <text id="8370000">Reduce el tiempo de carga de la habilidad de personaje</text>
 <text id="8380000">Ataques de aliento y rugidos mejorados</text>
 <text id="8390000">Recipientes arrojadizos mejorados</text>
@@ -944,7 +945,7 @@ Paso ligero al empezar una expedición</text>
 <text id="8640500">Un golpe crítico de rayo imbuye el armamento</text>
 <text id="8640600">Fragmentos de cristal tras golpe crítico mágico</text>
 <text id="8640700">Niebla venenosa tras un golpe crítico con veneno</text>
-<text id="8640800">Espinas punitivas tras un golpe crítico con hemorragia</text>
+<text id="8640800">Crítico de hemorragia: Zarzas de castigo</text>
 <text id="8640900">Hilos de plaga tras un golpe crítico con podredumbre</text>
 <text id="8641000">Tormenta de hielo tras un golpe crítico con congelación</text>
 <text id="8641100">Llama frenética tras un golpe crítico con locura</text>

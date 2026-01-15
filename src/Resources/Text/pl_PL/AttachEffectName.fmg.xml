@@ -458,10 +458,12 @@
 <text id="7001000">Równowaga +1</text>
 <text id="7001001">Równowaga +2</text>
 <text id="7001002">Równowaga +3</text>
-<text id="7001400">Wzmocnienie ataku fizycznego</text>
+<text id="7001400">Wzmocnienie ataku fizycznego
+</text>
 <text id="7001401">Wzmocnienie ataku fizycznego +1</text>
 <text id="7001402">Wzmocnienie ataku fizycznego +2</text>
-<text id="7001403">Wzmocnienie ataku fizycznego +3</text>
+<text id="7001403">Wzmocnienie ataku fizycznego +3
+</text>
 <text id="7001500">Wzmocnienie ataku magicznego</text>
 <text id="7001501">Wzmocnienie ataku magicznego +1</text>
 <text id="7001502">Wzmocnienie ataku magicznego +2</text>
@@ -509,8 +511,7 @@
 <text id="7010200">Butelka leczy też sojuszników</text>
 <text id="7010500">[Wilczan] Aktywacja zdolności ostatecznej podpala
 obszar</text>
-<text id="7010700">[Księżna] Seria ataków sztyletem
-powtarza wydarzenie dla pobliskich wrogów</text>
+<text id="7010700">[Księżna] Powtarza wydarzenia na pobliskich wrogach, zadając ostateczny cios w serii ataków sztyletem</text>
 <text id="7010800">[Najeźdźca] Zwiększenie obr. postaci od umiejętności,
 słabsza neg. obr. podczas używania</text>
 <text id="7010900">[Zjawa] Wydaj własne PŻ, aby całkowicie
@@ -594,7 +595,7 @@ maksymalne PŻ </text>
 gdy działa zdolność ostateczna</text>
 <text id="7034300">[Egzekutor] Zwiększa efekty zdolności,
 ale zmniejsza odporność na przypadłości</text>
-<text id="7034400">[Egzekutor] Umiejętność postaci zwiększa atak, który odbiera PŻ</text>
+<text id="7034400">[Egzekutor] Umiejętność postaci zwiększa atak, ale obniża negację obrażeń podczas ataku</text>
 <text id="7034500">[Egzekutor] Kiedy działa umiejętność postaci,
 odblokowywanie korzystania z przeklętego miecza przywraca PŻ</text>
 <text id="7034600">[Żelazne Oko] Aktywacja szarży zdolności ostatecznej dodaje efekt trucizny</text>
@@ -1024,7 +1025,7 @@ dwuręcznego</text>
 <text id="8640500">Trafienia krytyczne błyskawicą nasycają oręż</text>
 <text id="8640600">Odłamki kryształu po trafieniu krytycznym magią</text>
 <text id="8640700">Trująca mgła po trafieniu krytycznym trucizną</text>
-<text id="8640800">Trafienia krytyczne z krwawieniem: Ciernie kary</text>
+<text id="8640800">Kryt. utrata krwi: Ciernie kary</text>
 <text id="8640900">Trafienia krytyczne zgnilizną: Nici szkodników</text>
 <text id="8641000">Burza lodowa po trafieniu krytycznym mrozem</text>
 <text id="8641100">Trafienie krytyczne szaleństwa: Oszalały płomień</text>

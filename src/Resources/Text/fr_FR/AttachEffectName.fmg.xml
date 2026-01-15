@@ -508,8 +508,7 @@
 <text id="7010000">[Gardien] Portée de compétence de personnage augmentée</text>
 <text id="7010200">La fiole soigne également les alliés</text>
 <text id="7010500">[Rôdeur] L'activation de la technique ultime répand du feu</text>
-<text id="7010700">[Duchesse] Un enchaînement d'attaques à la dague
-déclenche une répétition sur les ennemis proches</text>
+<text id="7010700">[Duchesse] Le dernier coup d'un enchaînement d'attaque à la dague déclenche une répétition sur les ennemis à proximité.</text>
 <text id="7010800">[Forban] Augmente les dégâts de la compétence de personnage.
 Résistance aux dégâts réduite pendant utilisation</text>
 <text id="7010900">[Revenante] L'activation de la technique sacrifie vos PV
@@ -586,7 +585,7 @@ d'attaque d'affinité</text>
 quand la technique ultime est activée</text>
 <text id="7034300">[Exécuteur] Amplifie l'effet de la capacité
 mais réduit la résistance aux altérations</text>
-<text id="7034400">[Exécuteur] La compétence de personnage améliore les attaques, mais ces dernières drainent les PV</text>
+<text id="7034400">[Exécuteur] La comp. de perso. améliore les attaques, mais réduit la rés. aux dégâts lors des attaques.</text>
 <text id="7034500">[Exécuteur] Quand une compétence de personnage est activée,
 les attaques d'épée maudite restituent des PV</text>
 <text id="7034600">[Œil perçant] Charger la technique ultime octroie un effet de poison</text>
@@ -992,7 +991,7 @@ endort les ennemis</text>
 <text id="8640500">Les coups critiques de foudre génèrent un éclair</text>
 <text id="8640600">Les coups critiques magiques génèrent des éclats de cristal</text>
 <text id="8640700">Les coups critiques de poison lancent Brume empoisonnée</text>
-<text id="8640800">Les coups critiques de saignement projettent des ronces</text>
+<text id="8640800">Critique sur saignement : Ronces du châtiment</text>
 <text id="8640900">Les coups crit. avec la putréfaction écarlate projettent de la putr.</text>
 <text id="8641000">Les coups critiques avec congélation lancent Tempête de givre</text>
 <text id="8641100">Les coups critiques de démence lancent Flamme exaltée</text>

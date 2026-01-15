@@ -228,7 +228,7 @@ podridão escarlate +1</text>
 podridão escarlate +2</text>
 <text id="6260400">Aumento de poder de ataque ao enfrentar inimigo afetado por congelamento +1
 </text>
-<text id="6260401">Aumento de poder de ataque ao enfrentar inimigo afetado por congelamento +1
+<text id="6260401">Aumento de poder de ataque ao enfrentar inimigo afetado por congelamento +2
 </text>
 <text id="6500000">[Selvagem] A habilidade de personagem inflige hemorragia</text>
 <text id="6500100">[Guardião] A habilidade de personagem aumenta a negação de dano de aliados próximos</text>
@@ -461,10 +461,12 @@ podridão escarlate +2</text>
 <text id="7001000">Equilíbrio +1</text>
 <text id="7001001">Equilíbrio +2</text>
 <text id="7001002">Equilíbrio +3</text>
-<text id="7001400">Aumento de ataque físico</text>
+<text id="7001400">Aumento de ataque físico
+</text>
 <text id="7001401">Aumento de ataque físico +1</text>
 <text id="7001402">Aumento de ataque físico +2</text>
-<text id="7001403">Aumento de ataque físico +3</text>
+<text id="7001403">Aumento de ataque físico +3
+</text>
 <text id="7001500">Aumento do poder de ataque mágico</text>
 <text id="7001501">Aumento do poder de ataque mágico +1</text>
 <text id="7001502">Aumento do poder de ataque mágico +2</text>
@@ -512,8 +514,7 @@ podridão escarlate +2</text>
 <text id="7010200">Frasco também cura aliados</text>
 <text id="7010500">[Selvagem] Ativação de habilidade suprema espalha
 fogo na área</text>
-<text id="7010700">[Duquesa] Ataque de adaga sucessivo repete evento
-nos inimigos próximos</text>
+<text id="7010700">[Duquesa] Repita eventos em inimigos próximos ao acertar o último golpe de uma sequência de ataques com adaga</text>
 <text id="7010800">[Corsário] Aumento de dano da habilidade de personagem
 negação de dano reduzida durante o uso</text>
 <text id="7010900">[Espectro] Gasta os próprios PV para curar totalmente
@@ -595,8 +596,7 @@ PV máximos </text>
 a habilidade suprema ativa</text>
 <text id="7034300">[Executor] Melhora o efeito das habilidades mas
 reduz resistência a mazelas</text>
-<text id="7034400">[Executor] Habilidade de personagem eleva o ataque
-atacar consome PV</text>
+<text id="7034400">[Executor] Habilidade de personagem aumenta o ataque, mas reduz negação de dano enquanto ataca</text>
 <text id="7034500">[Executor] Com a habilidade de personagem ativa,
 liberar o uso de espada amaldiçoada recupera PV</text>
 <text id="7034600">[Olho-de-Ferro] Ativação de carga de suprema adiciona
@@ -1025,7 +1025,7 @@ aumentada</text>
 <text id="8640500">Críticos elétricos revestem armamento</text>
 <text id="8640600">Fragmentos de Cristal com acerto crítico mágico</text>
 <text id="8640700">Névoa Venenosa após crítico de veneno</text>
-<text id="8640800">Crítico de hemorragia: Espinhos de Punição</text>
+<text id="8640800">Crítico de hemorragia: Sarças da Punição</text>
 <text id="8640900">Crítico de podridão atira Fios de Praga</text>
 <text id="8641000">Tempestade de Gelo após crítico de congelamento</text>
 <text id="8641100">Crítico de loucura atira Chama Frenética</text>

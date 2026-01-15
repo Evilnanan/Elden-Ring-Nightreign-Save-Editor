@@ -459,10 +459,12 @@
 <text id="7001000">Gleichgewicht +1</text>
 <text id="7001001">Gleichgewicht +2</text>
 <text id="7001002">Gleichgewicht +3</text>
-<text id="7001400">Erhöhte körperliche Angriffskraft</text>
+<text id="7001400">Erhöhte körperliche Angriffskraft
+</text>
 <text id="7001401">Erhöhte körperliche Angriffskraft +1</text>
 <text id="7001402">Erhöhte körperliche Angriffskraft +2</text>
-<text id="7001403">Erhöhte körperliche Angriffskraft +3</text>
+<text id="7001403">Erhöhte körperliche Angriffskraft +3
+</text>
 <text id="7001500">Erhöhte magische Angriffskraft</text>
 <text id="7001501">Erhöhte magische Angriffskraft +1</text>
 <text id="7001502">Erhöhte magische Angriffskraft +2</text>
@@ -509,8 +511,7 @@
 <text id="7010000">[Wächter] Verbesserte Charaktertalent-Reichweite</text>
 <text id="7010200">Flaschen heilen auch Verbündete</text>
 <text id="7010500">[Wylder] Kunstaktivierung verbreitet Feuer im Bereich</text>
-<text id="7010700">[Gräfin] Dolch-Angriffsketten übertragen
-Ereignis auf Gegner in der Nähe</text>
+<text id="7010700">[Gräfin] Wiederholt Ereignisse an nahen Gegnern, indem Ihr den letzten Treffer einer Angriffskette mit Dolch landet</text>
 <text id="7010800">[Räuber] Charaktertalentschaden erhöht,
 Schadensresistenz während Nutzung verringert</text>
 <text id="7010900">[Gespenst] Verwendet bei Kunstaktivierung eigene LP,
@@ -589,8 +590,7 @@ Ultimativkunst erhöht die maximalen LP </text>
 während Ultimativkunst aktiv ist</text>
 <text id="7034300">[Exekutor] Verbesserte Effekte von Talenten,
 aber verringerte Resistenz gegen Statusleiden</text>
-<text id="7034400">[Exekutor] Charaktertalent erhöht Angriff,
-aber Angriffe verbrauchen LP</text>
+<text id="7034400">[Exekutor] Charaktertalent erhöht Angriff, verringert aber Schadensresistenz beim Angreifen</text>
 <text id="7034500">[Exekutor] Während Charaktertalent aktiv ist, stellt 
 Freischalten des verfluchten Schwerts LP her</text>
 <text id="7034600">[Eisenauge] Kunstladungsaktivierung
@@ -1032,7 +1032,7 @@ magische Explosionen</text>
 <text id="8640500">Waffenaufladung bei kritischem Blitz-Treffer</text>
 <text id="8640600">Kristallsplitter bei kritischem Magie-Treffer</text>
 <text id="8640700">Giftiger Nebel bei kritischem Gift-Treffer</text>
-<text id="8640800">Dornen der Bestrafung bei kritischem Blutverlust-Treffer</text>
+<text id="8640800">Blutungen-Krit.-Treffer: Dornbusch der Bestrafung</text>
 <text id="8640900">Ungezieferfäden bei kritischem Fäulnis-Treffer</text>
 <text id="8641000">Eissturm bei kritischem Frost-Treffer</text>
 <text id="8641100">Rasende Flamme bei kritischem Wahnsinn-Treffer</text>

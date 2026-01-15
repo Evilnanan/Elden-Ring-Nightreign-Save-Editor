@@ -470,10 +470,12 @@
 <text id="7001000">Aplomo +1</text>
 <text id="7001001">Aplomo +2</text>
 <text id="7001002">Aplomo +3</text>
-<text id="7001400">Aumento de ataque físico</text>
+<text id="7001400">Aumento de ataque físico
+</text>
 <text id="7001401">Aumento de ataque físico +1</text>
 <text id="7001402">Aumento de ataque físico +2</text>
-<text id="7001403">Aumento de ataque físico +3</text>
+<text id="7001403">Aumento de ataque físico +3
+</text>
 <text id="7001500">Aumento de ataque mágico</text>
 <text id="7001501">Aumento de ataque mágico +1</text>
 <text id="7001502">Aumento de ataque mágico +2</text>
@@ -520,7 +522,7 @@
 <text id="7010000">[Guardián] Mejora el alcance de la habilidad de personaje</text>
 <text id="7010200">El vial también cura a los aliados</text>
 <text id="7010500">[Sylvestre] Activar artes propaga fuego en la zona</text>
-<text id="7010700">[Duquesa] El ataque sucesivo con daga repite la acción con enemigos cercanos</text>
+<text id="7010700">[Duquesa] Repite la acción sobre enemigos cercanos al asestar el golpe final de un ataque encadenado con daga</text>
 <text id="7010800">[Saqueador] Aumenta el daño de la habilidad de personaje y anula la negación de daños</text>
 <text id="7010900">[Renacida] Gasta PS propios para curar a aliados cercanos al activar artes</text>
 <text id="7011000">[Guardián] Aumenta la duración de la habilidad de personaje</text>
@@ -579,7 +581,7 @@ mejora la potencia de ataque de afinidad</text>
 <text id="7034200">[Ejecutor] Aumenta el ataque con arte suprema activa</text>
 <text id="7034300">[Ejecutor] Mejora el efecto de la habilidad
 pero reduce la resistencia a los efectos negativos</text>
-<text id="7034400">[Ejecutor] La habilidad de personaje potencia el ataque, aunque consume PS</text>
+<text id="7034400">[Ejecutor] La habilidad de personaje potencia el ataque, pero reduce la negación de daños al atacar</text>
 <text id="7034500">[Ejecutor] Con la habilidad de personaje activa, usar espada maldita restaura PS</text>
 <text id="7034600">[Ojos de Acero] Activar la carga de artes añade efecto de veneno</text>
 <text id="7034700">[Ojos de Acero] Potencia los contraataques de embestida tras ejecutar un arte</text>
@@ -978,7 +980,7 @@ de la expedición</text>
 <text id="8640500">Impacto crítico de rayo imbuye arma</text>
 <text id="8640600">Esquirlas de cristal en golpe crítico mágico</text>
 <text id="8640700">Niebla venenosa en golpe crít. venen.</text>
-<text id="8640800">Hemorragia crítica: Espinas pecaminosas</text>
+<text id="8640800">Hemorragia crít.: Zarzas pecaminosas</text>
 <text id="8640900">Hileras de la plaga en golpe crítico con putrefacción</text>
 <text id="8641000">Tormenta helada en golpe crítico con congelación</text>
 <text id="8641100">Llama frenética en golpe crítico con locura</text>

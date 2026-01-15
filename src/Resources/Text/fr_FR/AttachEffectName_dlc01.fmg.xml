@@ -7,14 +7,14 @@
 <entries>
 <text id="6500800">[Érudit] Consommation de PC réduite en utilisant sa compétence de personnage sur soi-même.</text>
 <text id="6500900">[Fossoyeuse] L'utilisation de technique réinitialise la compétence de personnage.</text>
-<text id="6623200">Débutez l'expédition avec une larme de cristal verte fendue.</text>
+<text id="6623200">Débutez l'expédition avec une larme de cristal verte fendue</text>
 <text id="6647200">[Érudit] Esprit augmenté, vigueur réduite</text>
 <text id="6647300">[Érudit] Endurance et dextérité augmentées, intelligence et ésotérisme réduits</text>
 <text id="6647400">[Fossoyeuse] Dextérité améliorée, vigueur et foi réduites</text>
 <text id="6647500">[Fossoyeuse] Esprit et foi améliorés, force réduite</text>
-<text id="7006500">Récupération de PC continue.</text>
-<text id="7006600">Puissance d'attaque au corps à corps augmentée.</text>
-<text id="7006700">Puissance d'attaque des compétences augmentée.</text>
+<text id="7006500">Récupération de PC continue</text>
+<text id="7006600">Puissance d'attaque au corps à corps augmentée</text>
+<text id="7006700">Puissance d'attaque des compétences augmentée</text>
 <text id="7036200">[Érudit] Annule le ralentissement de progression de compétence de personnage</text>
 <text id="7036300">[Érudit] Augmente la puissance d'attaque de tous les alliés ciblés par la compétence de personnage</text>
 <text id="7036400">[Érudit] Dégâts continus sur les cibles liées par la technique ultime</text>
@@ -23,9 +23,9 @@
 <text id="7036900">[Fossoyeuse] Le dernier coup d'un enchaînement d'attaques augmente la puissance d'attaque</text>
 <text id="7037000">[Fossoyeuse] Renforce les att. physiques quand l'effet de soutien de l'incant. est actif sur soi</text>
 <text id="7037300">[Fossoyeuse] Lorsque la tech. ult. est active, tout contact avec des alliés leur octroie des PV</text>
-<text id="7037700">Les jauges d'altérations augmentent lentement la puissance d'attaque.</text>
-<text id="7037800">Lorsque la résistance aux dégâts est réduite, a une chance d'annuler l'effet d'une attaque.</text>
-<text id="7170100">Lorsque vous subissez des dégâts, vos attaques infligent de la putréfaction.</text>
+<text id="7037700">Les jauges d'altérations augmentent lentement la puissance d'attaque</text>
+<text id="7037800">Lorsque la résistance aux dégâts est réduite, a une chance d'annuler l'effet d'une attaque</text>
+<text id="7170100">Lorsque vous subissez des dégâts, vos attaques infligent de la putréfaction</text>
 <text id="7260900">Rend des PV en continu en cas de putréfaction à proximité</text>
 <text id="7360600">Au début de l'expédition, remplace la sorcellerie d'une arme compatible
 par Laméclat magique.</text>
@@ -61,10 +61,10 @@ par Griffes bestiales</text>
 par Essaim de mouches.</text>
 <text id="7371500">Au début de l'expédition, remplace l'incantation d'une arme compatible
 par Flamme draconique</text>
-<text id="8320500">Puissance d'attaque au corps à corps augmentée.</text>
-<text id="8320600">Puissance des attaques effectuées en sprintant augmentée.</text>
-<text id="8320700">Puissance des attaques effectuées en roulant augmentée.</text>
-<text id="8360000">Augmentation de la vitesse de chargement de la jauge de technique.</text>
+<text id="8320500">Puissance d'attaque au corps à corps augmentée</text>
+<text id="8320600">Puissance des attaques effectuées en sprintant augmentée</text>
+<text id="8320700">Puissance des attaques effectuées en roulant augmentée</text>
+<text id="8360000">Rechargement automatique de technique ultime +</text>
 <text id="8880000">Attaque chargée : tempête de givre</text>
 <text id="8880200">Attaque chargée : flammes noires</text>
 <text id="8880300">Attaque chargée : attaque fantomatique</text>

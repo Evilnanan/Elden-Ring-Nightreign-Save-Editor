@@ -458,10 +458,12 @@
 <text id="7001000">Poise +1</text>
 <text id="7001001">Poise +2</text>
 <text id="7001002">Poise +3</text>
-<text id="7001400">Physical Attack Up</text>
+<text id="7001400">Physical Attack Up
+</text>
 <text id="7001401">Physical Attack Up +1</text>
 <text id="7001402">Physical Attack Up +2</text>
-<text id="7001403">Physical Attack Up +3</text>
+<text id="7001403">Physical Attack Up +3
+</text>
 <text id="7001500">Magic Attack Power Up</text>
 <text id="7001501">Magic Attack Power Up +1</text>
 <text id="7001502">Magic Attack Power Up +2</text>
@@ -508,8 +510,7 @@
 <text id="7010000">[Guardian] Improved Character Skill range</text>
 <text id="7010200">Flask Also Heals Allies</text>
 <text id="7010500">[Wylder] Art activation spreads fire in area</text>
-<text id="7010700">[Duchess] Successive dagger attack reprises event upon
-nearby enemies</text>
+<text id="7010700">[Duchess] Reprise events upon nearby enemies by landing the final blow of a chain attack with dagger</text>
 <text id="7010800">[Raider] Character Skill damage up, damage negation
 impaired during use</text>
 <text id="7010900">[Revenant] Expend own HP to fully heal nearby allies
@@ -587,7 +588,7 @@ Affinity Attack Power</text>
 active</text>
 <text id="7034300">[Executor] Improves effect of ability but lowers
 resistance to status ailments</text>
-<text id="7034400">[Executor] Character Skill Boosts Attack but Attacking Drains HP</text>
+<text id="7034400">[Executor] Character Skill Boosts Attack but Lowers Damage Negation While Attacking</text>
 <text id="7034500">[Executor] While Character Skill is active,
 unlocking use of cursed sword restores HP</text>
 <text id="7034600">[Ironeye] Art Charge Activation Adds Poison Effect</text>
@@ -1002,7 +1003,7 @@ enemies</text>
 <text id="8640500">Lightning Critical Hit Imbues Armament</text>
 <text id="8640600">Crystal Shards upon Magic Critical Hit</text>
 <text id="8640700">Poison Mist upon Poison Critical Hit</text>
-<text id="8640800">Blood Loss Crit: Thorns of Punishment</text>
+<text id="8640800">Blood Loss Crit: Briars of Punishment</text>
 <text id="8640900">Rot Critical Hit Fires Pest Threads</text>
 <text id="8641000">Ice Storm upon Critical Hit with Frost</text>
 <text id="8641100">Madness Crit. Hit Fires Frenzied Flame</text>
