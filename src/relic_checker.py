@@ -742,6 +742,8 @@ class RelicChecker:
             self.illegal_gas.remove(ga)
         if ga in self.curse_illegal_gas:
             self.curse_illegal_gas.remove(ga)
+        if ga in self.strict_invalid_gas:
+            self.strict_invalid_gas.remove(ga)
 
     def update_illegal(self, ga_handle, item_id, source_effects):
         invalid_reason = self.check_invalidity(item_id, source_effects)
@@ -749,6 +751,12 @@ class RelicChecker:
             self.append_illegal(ga_handle, is_curse_invalid(invalid_reason))
         elif not invalid_reason and ga_handle in self.illegal_gas:
             self.remove_illegal(ga_handle)
+        if self.is_strict_invalid(item_id, source_effects, invalid_reason):
+            if ga_handle not in self.strict_invalid_gas:
+                self.strict_invalid_gas.append(ga_handle)
+        else:
+            if ga_handle in self.strict_invalid_gas:
+                self.strict_invalid_gas.remove(ga_handle)
 
     def find_id_range(self, relic_id: int):
         for group_name, group_range in self.RELIC_GROUPS.items():
