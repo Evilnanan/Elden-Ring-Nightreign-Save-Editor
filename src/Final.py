@@ -9,7 +9,9 @@ from typing import Optional, Any
 import sys
 import threading
 import re
+import logging
 # project modules
+from log_config import setup_logging
 from basic_class import Item
 import globals
 from globals import (ITEM_TYPE_RELIC, ITEM_TYPE_GOODS,
@@ -18,6 +20,18 @@ from globals import (ITEM_TYPE_RELIC, ITEM_TYPE_GOODS,
 from relic_checker import RelicChecker, InvalidReason, is_curse_invalid
 from source_data_handler import SourceDataHandler, get_system_language
 from vessel_handler import LoadoutHandler, is_vessel_unlocked
+
+
+def get_base_dir():
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).parent
+    else:
+        return Path(__file__).resolve().parent
+
+
+# Setup Logger
+setup_logging(get_base_dir().joinpath("logs").as_posix())
+logger = logging.getLogger(__name__)
 
 
 # Global variables
@@ -36,14 +50,8 @@ def _ensure_data_source():
     """Lazy initialize data_source on first use"""
     global data_source, loadout_handler
     if data_source is None:
+        logger.info("Initializing SourceDataHandler")
         data_source = SourceDataHandler(language=get_system_language())
-
-
-def get_base_dir():
-    if getattr(sys, 'frozen', False):
-        return Path(sys.executable).parent
-    else:
-        return Path(__file__).resolve().parent
 
 
 # Config file path for remembering last opened file
@@ -56,8 +64,8 @@ def load_config():
         if os.path.exists(CONFIG_FILE):
             with open(CONFIG_FILE, 'r') as f:
                 return json.load(f)
-    except:
-        pass
+    except Exception as e:
+        logger.warning("Could not load config file: %s", e)
     return {}
 
 def save_config(config):
@@ -66,7 +74,7 @@ def save_config(config):
         with open(CONFIG_FILE, 'w') as f:
             json.dump(config, f, indent=2)
     except Exception as e:
-        print(f"Warning: Could not save config: {e}")
+        logger.warning("Could not save config file: %s", e)
 
 def autosize_treeview_columns(tree, padding=20, min_width=50):
     """Auto-size treeview columns based on content width, prevent stretching"""
@@ -165,8 +173,8 @@ def get_vessel_info(char_name, vessel_slot):
                     'character': vessel_data_info.get('Character', char_name),
                     'unlockFlag': vessel_data_info.get('unlockFlag', 0)
                 }
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error("Error retrieving vessel data for ID %d: %s", vessel_id, e)
 
     return {'name': f"Vessel {vessel_slot}", 'unlockFlag': 0}
 
@@ -197,89 +205,10 @@ def reload_language(language_code):
     return result
 
 
-# class Item:
-#     BASE_SIZE = 8
-
-#     def __init__(self, gaitem_handle, item_id, effect_1, effect_2, effect_3,
-#                  durability, unk_1, sec_effect1, sec_effect2, sec_effect3,
-#                  unk_2, offset, extra=None, size=BASE_SIZE):
-#         self.gaitem_handle = gaitem_handle
-#         self.item_id = item_id
-#         self.effect_1 = effect_1
-#         self.effect_2 = effect_2
-#         self.effect_3 = effect_3
-#         self.durability = durability
-#         self.unk_1 = unk_1
-#         self.sec_effect1 = sec_effect1
-#         self.sec_effect2 = sec_effect2
-#         self.sec_effect3 = sec_effect3
-#         self.unk_2 = unk_2
-#         self.offset = offset
-#         self.size = size
-#         self.padding = extra or ()
-
-#     @classmethod
-#     def from_bytes(cls, data_type, offset=0):
-#         data_len = len(data_type)
-
-#         # Check if we have enough data for the base read
-#         if offset + cls.BASE_SIZE > data_len:
-#             # Return empty item if not enough data
-#             return cls(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, offset, size=cls.BASE_SIZE)
-
-#         gaitem_handle, item_id = struct.unpack_from("<II", data_type, offset)
-#         type_bits = gaitem_handle & 0xF0000000
-#         cursor = offset + cls.BASE_SIZE
-#         size = cls.BASE_SIZE
-
-#         durability = unk_1 = unk_2 = 0
-#         effect_1 = effect_2 = effect_3 = 0
-#         sec_effect1 = sec_effect2 = sec_effect3 = 0
-#         padding = ()
-
-#         if gaitem_handle != 0:
-#             if type_bits == ITEM_TYPE_WEAPON:
-#                 cursor += 80
-#                 size = cursor - offset
-#             elif type_bits == ITEM_TYPE_ARMOR:
-#                 cursor += 8
-#                 size = cursor - offset
-#             elif type_bits == ITEM_TYPE_RELIC:
-#                 # Check bounds before each read to handle corrupted/truncated saves
-#                 if cursor + 8 > data_len:
-#                     return cls(gaitem_handle, item_id, 0, 0, 0, 0, 0, 0, 0, 0, 0, offset, size=cls.BASE_SIZE)
-#                 durability, unk_1 = struct.unpack_from("<II", data_type, cursor)
-#                 cursor += 8
-
-#                 if cursor + 12 > data_len:
-#                     return cls(gaitem_handle, item_id, 0, 0, 0, durability, unk_1, 0, 0, 0, 0, offset, size=cursor-offset)
-#                 effect_1, effect_2, effect_3 = struct.unpack_from("<III", data_type, cursor)
-#                 cursor += 12
-
-#                 if cursor + 0x1C > data_len:
-#                     return cls(gaitem_handle, item_id, effect_1, effect_2, effect_3, durability, unk_1, 0, 0, 0, 0, offset, size=cursor-offset)
-#                 padding = struct.unpack_from("<7I", data_type, cursor)
-#                 cursor += 0x1C
-
-#                 if cursor + 12 > data_len:
-#                     return cls(gaitem_handle, item_id, effect_1, effect_2, effect_3, durability, unk_1, 0, 0, 0, 0, offset, extra=padding, size=cursor-offset)
-#                 sec_effect1, sec_effect2, sec_effect3 = struct.unpack_from("<III", data_type, cursor)
-#                 cursor += 12
-
-#                 if cursor + 4 > data_len:
-#                     return cls(gaitem_handle, item_id, effect_1, effect_2, effect_3, durability, unk_1, sec_effect1, sec_effect2, sec_effect3, 0, offset, extra=padding, size=cursor-offset)
-#                 unk_2 = struct.unpack_from("<I", data_type, cursor)[0]
-#                 cursor += 12
-#                 size = cursor - offset
-
-#         return cls(gaitem_handle, item_id, effect_1, effect_2, effect_3,
-#                    durability, unk_1, sec_effect1, sec_effect2, sec_effect3,
-#                    unk_2, offset, extra=padding, size=size)
-
-
 def parse_items(data_type, start_offset, slot_count=5120):
     items = []
     offset = start_offset
+    logger.info("Parsing %d items starting at offset 0x%X", slot_count, start_offset)
     for _ in range(slot_count):
         item = Item.from_bytes(data_type, offset)
         items.append(item)
@@ -302,6 +231,7 @@ def parse_inventory_acquisition_order(data_type, items_end_offset):
 
     # Inventory section starts at items_end_offset + 0x650
     inventory_start = items_end_offset + 0x650
+    logger.debug("Parsing inventory acquisition order from 0x%X", inventory_start)
 
     # Build set of known relic GA handles for quick lookup
     relic_ga_set = set()
@@ -329,20 +259,27 @@ def parse_inventory_acquisition_order(data_type, items_end_offset):
 def parse_goods(data_type, name_offset):
     globals.ga_goods = []
     globals.goods_id_list = []
-    start_offset = name_offset + 0x5B8
-    base_size = 12 + 2  # 2 bytes padding
-    # First 4 bytes: Item count
+    start_offset = name_offset + 0x5B8  # same section with parse acq order function
+    base_size = 12 + 2  # 2 bytes unknown(maybe some kind of flag, sellable or favorite)
+    # First 4 bytes: Item last index
     # Followed by Item structures (Base size 14 bytes):
     # - 4 bytes: ga_handle, Composite LE (Byte 0: Type 0xB0=Goods, Bytes 1-3: ID)
     # - 4 bytes: item_quantity
     # - 4 bytes: unknown
     # - 2 bytes: unknown
-    count = struct.unpack_from("<I", data_type, start_offset)[0]
+    last_index = struct.unpack_from("<I", data_type, start_offset)[0]
     cursor = start_offset + 4
-    for i in range(count):
+    i = 0
+    total_count = 0
+    for i in range(last_index+1):
         ga_handle = struct.unpack_from("<I", data_type, cursor)[0]
+        iten_amount = struct.unpack_from("<I", data_type, cursor + 4)[0]
+        total_count += iten_amount
+        acquisition = struct.unpack_from("<I", data_type, cursor + 8)[0]
+        unknown = struct.unpack_from("<H", data_type, cursor + 12)[0]
+        logger.debug("Item %d at 0x%X: GA Handle=0x%X, Amount=%d, Acquisition=0x%X, Unknown=0x%X",
+                     i, cursor, ga_handle, iten_amount, acquisition, unknown)
         if ga_handle == 0:
-            i -= 1
             cursor += base_size
             continue
         type_bits = ga_handle & 0xFF000000
@@ -351,6 +288,8 @@ def parse_goods(data_type, name_offset):
             globals.ga_goods.append((ga_handle, goods_id))
             globals.goods_id_list.append(goods_id)
         cursor += base_size
+    logger.debug("last index of goods items: %d", last_index)
+    logger.debug("total count of goods items: %d", total_count)
 
 
 def gaprint(data_type):
