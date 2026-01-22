@@ -12,11 +12,12 @@ import re
 # project modules
 from basic_class import Item
 import globals
-from globals import (ITEM_TYPE_RELIC, WORKING_DIR, COLOR_MAP)
+from globals import (ITEM_TYPE_RELIC, ITEM_TYPE_GOODS,
+                     WORKING_DIR, COLOR_MAP)
 
 from relic_checker import RelicChecker, InvalidReason, is_curse_invalid
 from source_data_handler import SourceDataHandler, get_system_language
-from vessel_handler import LoadoutHandler
+from vessel_handler import LoadoutHandler, is_vessel_unlocked
 
 
 # Global variables
@@ -325,6 +326,33 @@ def parse_inventory_acquisition_order(data_type, items_end_offset):
     return ga_acquisition_order
 
 
+def parse_goods(data_type, name_offset):
+    globals.ga_goods = []
+    globals.goods_id_list = []
+    start_offset = name_offset + 0x5B8
+    base_size = 12 + 2  # 2 bytes padding
+    # First 4 bytes: Item count
+    # Followed by Item structures (Base size 14 bytes):
+    # - 4 bytes: ga_handle, Composite LE (Byte 0: Type 0xB0=Goods, Bytes 1-3: ID)
+    # - 4 bytes: item_quantity
+    # - 4 bytes: unknown
+    # - 2 bytes: padding
+    count = struct.unpack_from("<I", data_type, start_offset)[0]
+    cursor = start_offset + 4
+    for i in range(count):
+        ga_handle = struct.unpack_from("<I", data_type, cursor)[0]
+        if ga_handle == 0:
+            i -= 1
+            cursor += base_size
+            continue
+        type_bits = ga_handle & 0xFF000000
+        if type_bits == ITEM_TYPE_GOODS:
+            goods_id = ga_handle & 0x00FFFFFF
+            globals.ga_goods.append((ga_handle, goods_id))
+            globals.goods_id_list.append(goods_id)
+        cursor += base_size
+
+
 def gaprint(data_type):
     global ga_relic, ga_items
     ga_items = []
@@ -354,6 +382,9 @@ def gaprint(data_type):
 
     # Parse inventory section to get acquisition order
     parse_inventory_acquisition_order(data_type, end_offset)
+    
+    # Parse goods for check if player had vessel unlocked
+    parse_goods(data_type, end_offset+0x94)  # end_offset+0x94 = name_offset
 
     return end_offset
 
@@ -2172,6 +2203,8 @@ class SaveEditorGUI:
             # Get vessel info for this character
             vessel_data_info = get_vessel_info(char_name, vessel_slot)
             vessel_name = vessel_data_info['name']
+            hero_type = self.vessel_char_combo.current()+1
+            vessel_id = loadout_handler.heroes[hero_type].vessels[vessel_slot]['vessel_id']
 
             # Update vessel frame title with actual vessel name
             if vessel_slot < len(self.vessel_frames):
@@ -2179,11 +2212,12 @@ class SaveEditorGUI:
 
                 vessel_info = loadout.get(vessel_slot, {})
                 has_relics = vessel_info.get('has_relics', False)
+                is_unlocked = is_vessel_unlocked(vessel_id, data_source)
 
                 # Update status label
                 if vessel_slot < len(self.vessel_status_labels):
                     unlock_flag = vessel_data_info.get('unlockFlag', 0)
-                    if has_relics:
+                    if is_unlocked:
                         # Has relics = definitely unlocked
                         relic_count = sum(1 for _, r in vessel_info.get('relics', []) if r is not None)
                         self.vessel_status_labels[vessel_slot].config(
