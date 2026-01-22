@@ -4096,7 +4096,7 @@ class SaveEditorGUI:
         selection_frame.pack(side='left', padx=20)
         
         ttk.Button(selection_frame, text="Select All", command=self.select_all_relics).pack(side='left', padx=2)
-        ttk.Button(selection_frame, text="Deselect All", command=self.deselect_all_relics)  # .pack(side='left', padx=2)
+        ttk.Button(selection_frame, text="Deselect All", command=self.deselect_all_relics).pack(side='left', padx=2)
         selection_count_text = tk.StringVar()
         selection_count_text.set("0 selected")
         self.selection_count_label = ttk.Label(selection_frame, textvariable=selection_count_text, foreground='blue', font=('Arial', 9, 'bold'))
