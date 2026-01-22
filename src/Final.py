@@ -336,7 +336,7 @@ def parse_goods(data_type, name_offset):
     # - 4 bytes: ga_handle, Composite LE (Byte 0: Type 0xB0=Goods, Bytes 1-3: ID)
     # - 4 bytes: item_quantity
     # - 4 bytes: unknown
-    # - 2 bytes: padding
+    # - 2 bytes: unknown
     count = struct.unpack_from("<I", data_type, start_offset)[0]
     cursor = start_offset + 4
     for i in range(count):
@@ -1777,7 +1777,7 @@ class SaveEditorGUI:
         global loadout_handler
         # ttk Style setting
         style = ttk.Style()
-        style.configure('Add.TButton', foreground='green', font=('Arial', 10, 'bold'))
+        style.configure('Add.TButton', foreground='gray', font=('Arial', 10, 'bold'))
         style.configure('Danger.TButton', foreground='red', font=('Arial', 10))
         
         _ensure_data_source()
@@ -5121,6 +5121,9 @@ class SaveEditorGUI:
         self.refresh_inventory_lightly()
 
     def add_relic_tk(self):
+        if True:
+            messagebox.showinfo("Info", "Relic adding is currently disabled.")
+            return
         if globals.data is None:
             messagebox.showwarning(
                 "Warning", "No save file loaded. Please open a save file first."
