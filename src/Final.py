@@ -6015,7 +6015,7 @@ class ModifyRelicDialog:
             # Check if effects are valid WITH rearrangement (like the game does)
             # Use require_curses_present=False so we can find relics where curses CAN be added
             invalid_reason = relic_checker.check_invalidity(relic_id, effects) if relic_checker else None
-            if not is_curse_invalid(invalid_reason):
+            if is_curse_invalid(invalid_reason) or invalid_reason == InvalidReason.NONE:
                 if not relic_checker.is_strict_invalid(relic_id, effects, invalid_reason):
                     valid_candidates.append(relic_id)
         return valid_candidates
@@ -6127,7 +6127,7 @@ class ModifyRelicDialog:
             try:
                 current_pools = data_source.get_relic_pools_seq(current_relic_id)
                 invalid_reason = relic_checker.check_invalidity(current_relic_id, current_effects)
-                if not invalid_reason and relic_checker.is_strict_invalid(current_relic_id, current_effects, invalid_reason):
+                if not invalid_reason and not relic_checker.is_strict_invalid(current_relic_id, current_effects, invalid_reason):
                     # Current relic is fine, no change needed
                     return
             except (KeyError, IndexError):
