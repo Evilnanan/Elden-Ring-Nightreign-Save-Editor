@@ -6458,7 +6458,7 @@ class ModifyRelicDialog:
 
         # For curse slots, add "No Curse (Empty)" option at the top
         if is_curse_slot:
-            _items = _items.insert(0, 0xffffffff)
+            _items.insert(0, 0xffffffff)
 
         # Build dialog title with relic type info in safe mode
         if self.safe_mode_var.get():
@@ -6627,7 +6627,7 @@ class SearchDialog:
             
             self.lock_color_var.trace('w', lambda *args: self.filter_results())
             self.color_var.trace('w', lambda *args: self.filter_results())
-            self.color_var.trace_add('write', color_map_to_int)
+            self.color_var.trace_add('write', lambda *args: color_map_to_int())
             
             # Relic Type Row
             type_row = ttk.Frame(filter_frame)
