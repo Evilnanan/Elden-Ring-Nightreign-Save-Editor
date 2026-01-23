@@ -5446,12 +5446,23 @@ class ModifyRelicDialog:
             self.status_label.config(text="❌ ILLEGAL (fixable)", foreground='#CC6600')
             self.illegal_reason_label.config(text="\n".join(reasons))
             return
+        
+        # Check if fixable by relic change
+        if invalid_reason == InvalidReason.CURSE_SLOT_UNNECESSARY:
+            reasons = [
+                "• There are more curse slots than needed for the assigned effects",
+                "• Use 'Find Valid ID' button or 'Mass Fix' to automatically find a better relic ID"
+            ]
+            self.status_label.config(text="❌ ILLEGAL (fixable)", foreground='#CC6600')
+            self.illegal_reason_label.config(text="\n".join(reasons))
+            return
 
         # Build human-readable message based on InvalidReason enum
         reason_messages = {
             InvalidReason.IN_ILLEGAL_RANGE: "• Relic ID is in an illegal/reserved range (20000-30035)",
             InvalidReason.INVALID_ITEM: f"• Relic ID {relic_id} is not a valid relic",
             InvalidReason.EFF_CONFLICT: "• Two effects have the same conflict ID and cannot be combined",
+            InvalidReason.EFF_NOT_ASSIGNED: f"• Effect slot {invalid_idx + 1} must be assigned an effect but is empty",
             InvalidReason.CURSE_CONFLICT: "• Two curses have the same conflict ID and cannot be combined",
             InvalidReason.CURSES_NOT_ENOUGH: f"• Not enough curses provided - some effects require curses on {relic_type_desc}s",
         }
@@ -6474,6 +6485,7 @@ class ModifyRelicDialog:
     def on_item_selected(self, item_id):
         """Callback when item is selected from search"""
         self.item_id_var.set(str(item_id))
+        self.update_debug_info()
     
     def on_effect_selected(self, effect_index, effect_id):
         """Callback when effect is selected from search"""
@@ -6526,6 +6538,7 @@ class ModifyRelicDialog:
                 InvalidReason.EFF_NOT_IN_ROLLABLE_POOL: "One or more effects cannot roll on this relic",
                 InvalidReason.EFF_MUST_EMPTY: "Effect slot must be empty for this relic",
                 InvalidReason.EFF_CONFLICT: "Effects have conflicting IDs",
+                InvalidReason.EFF_NOT_ASSIGNED: "Effect slot must be assigned for this relic",
                 InvalidReason.CURSE_NOT_IN_ROLLABLE_POOL: "One or more curses cannot roll on this relic",
                 InvalidReason.CURSE_MUST_EMPTY: "Curse slot must be empty for this relic",
                 InvalidReason.CURSE_REQUIRED_BY_EFFECT: "Effect requires a curse but none provided",

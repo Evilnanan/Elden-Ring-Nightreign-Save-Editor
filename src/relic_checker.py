@@ -11,6 +11,7 @@ class InvalidReason(IntEnum):
     IN_ILLEGAL_RANGE = auto()
     INVALID_ITEM = auto()
     EFF_MUST_EMPTY = auto()
+    EFF_NOT_ASSIGNED = auto()
     EFF_NOT_IN_ROLLABLE_POOL = auto()
     EFF_CONFLICT = auto()
 
@@ -19,6 +20,7 @@ class InvalidReason(IntEnum):
     CURSE_NOT_IN_ROLLABLE_POOL = auto()
     CURSE_CONFLICT = auto()
     CURSES_NOT_ENOUGH = auto()
+    CURSE_SLOT_UNNECESSARY = auto()
 
     EFFS_NOT_SORTED = auto()
 
@@ -29,7 +31,8 @@ def is_curse_invalid(reason: int):
         InvalidReason.CURSE_REQUIRED_BY_EFFECT,
         InvalidReason.CURSE_NOT_IN_ROLLABLE_POOL,
         InvalidReason.CURSE_CONFLICT,
-        InvalidReason.CURSES_NOT_ENOUGH
+        InvalidReason.CURSES_NOT_ENOUGH,
+        InvalidReason.CURSE_SLOT_UNNECESSARY,
     ]
 
 
@@ -91,8 +94,7 @@ class RelicChecker:
                         test_result.append(InvalidReason.NONE)
                 else:
                     if eff in [-1, 0, 4294967295]:
-                        # Empty effect is OK (slot just not used)
-                        test_result.append(InvalidReason.NONE)
+                        test_result.append(InvalidReason.EFF_NOT_ASSIGNED)
                     elif eff not in self.data_source.get_pool_rollable_effects(pools[idx]):
                         # Effect must have non-zero weight in the pool to be valid
                         test_result.append(InvalidReason.EFF_NOT_IN_ROLLABLE_POOL)
@@ -119,7 +121,7 @@ class RelicChecker:
                         if effect_needs:
                             test_result.append(InvalidReason.CURSE_REQUIRED_BY_EFFECT)
                         else:
-                            test_result.append(InvalidReason.NONE)
+                            test_result.append(InvalidReason.CURSE_SLOT_UNNECESSARY)
                     elif curse not in self.data_source.get_pool_rollable_effects(curse_pool):
                         # Curse must have non-zero weight in the pool
                         test_result.append(InvalidReason.CURSE_NOT_IN_ROLLABLE_POOL)
