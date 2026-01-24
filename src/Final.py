@@ -20,6 +20,7 @@ from globals import (ITEM_TYPE_RELIC, ITEM_TYPE_GOODS,
 from relic_checker import RelicChecker, InvalidReason, is_curse_invalid
 from source_data_handler import SourceDataHandler, get_system_language
 from vessel_handler import LoadoutHandler, is_vessel_unlocked
+from inventory_handler import InventoryHandler
 
 
 def get_base_dir():
@@ -41,6 +42,7 @@ os.chdir(WORKING_DIR)
 data_source: Optional[SourceDataHandler] = None
 relic_checker: Optional[RelicChecker] = None
 loadout_handler: Optional[LoadoutHandler] = None
+inventory_handler: Optional[InventoryHandler] = None
 items_json = {}
 effects_json = {}
 userdata_path = None
@@ -271,7 +273,7 @@ def parse_inventory_section(data_type, name_offset):
     # - 1 byte: bool -> is favorite
     # - 1 byte: bool -> is sellable
     counts = struct.unpack_from("<I", data_type, start_offset)[0]
-    MAX_INVENTORY_COUNT = 3071
+    MAX_INVENTORY_COUNT = 3065
     cursor = start_offset + 4
     i = 0
     for _ in range(MAX_INVENTORY_COUNT):
@@ -282,11 +284,9 @@ def parse_inventory_section(data_type, name_offset):
             cursor += base_size
             continue
         
-        iten_amount = struct.unpack_from("<I", data_type, cursor + 4)[0]
+        item_amount = struct.unpack_from("<I", data_type, cursor + 4)[0]
         acquisition = struct.unpack_from("<I", data_type, cursor + 8)[0]
         is_favorite, is_sellable = struct.unpack_from("<BB", data_type, cursor + 12)
-        logger.debug("Item %d at 0x%X: GA Handle=0x%X, Amount=%d, Acquisition=0x%X, is_favorite=%d, is_sellable=%d",
-                     i, cursor, ga_handle, iten_amount, acquisition, is_favorite, is_sellable)
         type_bits = ga_handle & 0xFF000000
         if type_bits == ITEM_TYPE_GOODS:
             goods_id = ga_handle & 0x00FFFFFF
@@ -296,15 +296,6 @@ def parse_inventory_section(data_type, name_offset):
             globals.ga_relics_list.append(ga_handle)
         cursor += base_size
         i += 1
-    logger.debug("counts of goods items: %d", counts)
-    
-
-def debug_ga_relic_check():
-    global ga_relic
-    _ga_handles = [item[0] for item in ga_relic]
-    for ga_handle in globals.ga_relics_list:
-        if ga_handle not in _ga_handles:
-            logger.debug("Relic GA handle 0x%X found in inventory but not in ga_relic parsed items", ga_handle)
 
 
 def gaprint(data_type):
@@ -1014,6 +1005,7 @@ def name_to_path_import():
 def delete_relic(ga_index, item_id):
     
     last_offset = gaprint(globals.data)
+    inventory_count_offset = last_offset + 0x64C
     inventory_start = last_offset + 0x650
     inventory_end = inventory_start + 0xA7AB
     inventory_data = globals.data[inventory_start:inventory_start + inventory_end]
@@ -1025,8 +1017,18 @@ def delete_relic(ga_index, item_id):
         real_id = id - 2147483648
         
         if ga_index == ga and real_id == item_id:
+            logger.info(f"Deleting relic GA: 0x{ga_index:08X}, Item ID: {item_id} at offset 0x{offset:06X}")
             inventory_offset = inventory_data.find(ga_bytes)
             match = inventory_offset + inventory_start
+            logger.debug(f"Found inventory entry at offset 0x{match:06X}")
+            
+            # Update the inventory count
+            logger.info("Updating inventory count")
+            current_count = int.from_bytes(globals.data[inventory_count_offset : inventory_count_offset + 4], "little")
+            new_count = current_count - 1
+            logger.debug(f"Current inventory count: {current_count}")
+            logger.debug(f"New inventory count: {new_count}")
+            globals.data = globals.data[:inventory_count_offset] + new_count.to_bytes(4, "little") + globals.data[inventory_count_offset + 4:]
             
             globals.data = globals.data[:match] + b"\x00" * 14 + globals.data[match+14:]
 
@@ -1058,12 +1060,17 @@ def add_relic() -> tuple[bool, Any]:
         bool: True if the relic was successfully added, False otherwise
         ga: New GA handle of the added relic, or None on failure
     """
-
+    logger.info("Adding a new relic")
     last_offset = gaprint(globals.data)
 
+    inventory_count_offset = last_offset + 0x64C
     inventory_start = last_offset + 0x650
     inventory_end = inventory_start + 0xA7AB
     inventory_data = globals.data[inventory_start : inventory_start + inventory_end]
+    logger.debug(f"Last offset: 0x{last_offset:06X}")
+    logger.debug(f"Inventory count offset: 0x{inventory_count_offset:06X}")
+    logger.debug(f"Inventory start: 0x{inventory_start:06X}")
+    logger.debug(f"Inventory end: 0x{inventory_end:06X}")
 
     # Find the first existing GA handle among all relics.
     gas = sorted([ga for ga, id, e1, e2, e3, e4, e5, e6, offset, size in ga_relic])
@@ -1072,6 +1079,7 @@ def add_relic() -> tuple[bool, Any]:
         if gas[i] + 1 != gas[i+1]:
             first_available_ga = gas[i] + 1
             break
+    logger.debug(f"First available GA: 0x{first_available_ga:08X}")
 
     # Find the new unique ga for the relic
     if len(gas) == 0:
@@ -1083,19 +1091,24 @@ def add_relic() -> tuple[bool, Any]:
     else:
         # Generate a new unique GA handle by incrementing the max.
         new_ga = max(gas) + 1
+    
     if new_ga > (ITEM_TYPE_RELIC | 0xfffffff):
         # Inventory full
+        logger.info("Inventory full")
         return False, None
     new_ga_bytes = new_ga.to_bytes(4, byteorder="little")
+    logger.debug(f"New GA: 0x{new_ga:08X}, bytes: {new_ga_bytes.hex()}")
 
     # Build the inventory entry (14 bytes) for the new relic.
     id_to_write = bytearray(new_ga_bytes + b"\x01\x00\x00\x00'|\x00\x00\x00\x00")
+    logger.debug(f"New inventory entry: {id_to_write.hex()}")
 
     # Build the full relic item data (80 bytes) for the item slot section.
     replacement = bytearray(
         new_ga_bytes
         + b"u\x00\x00\x80u\x00\x00\x80\xff\xff\xff\xff\xe4xk\x00 \xb4l\x00\x9e\xd5j\x00\xff\xff\xff\xff\xff\xff\xff\xff\x00\x00\x00\xff\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00"
     )
+    logger.debug(f"New relic data: {replacement.hex()}")
 
     # Find the position of the last relic in the inventory section.
     last_inventory = -1
@@ -1104,7 +1117,9 @@ def add_relic() -> tuple[bool, Any]:
         last_inventory = max(last_inventory, inventory_data.find(gab))
     if last_inventory == -1:
         # No existing relics found in inventory - cannot determine insertion point
+        logger.info("No existing relics found in inventory")
         return False, None
+    logger.debug(f"Last inventory offset: 0x{last_inventory:06X}")
 
     # Find an empty slot in the item data section to convert into a relic slot.
     empty_slot_offset = -1
@@ -1117,6 +1132,13 @@ def add_relic() -> tuple[bool, Any]:
         # No empty slot available to convert - inventory is full
         return False, None
 
+    # And Update the inventory count
+    current_count = int.from_bytes(globals.data[inventory_count_offset : inventory_count_offset + 4], "little")
+    new_count = current_count + 1
+    logger.debug(f"Current inventory count: {current_count}")
+    logger.debug(f"New inventory count: {new_count}")
+    globals.data = globals.data[:inventory_count_offset] + new_count.to_bytes(4, "little") + globals.data[inventory_count_offset + 4:]
+    
     # Write the inventory entry at the calculated position.
     match = last_inventory + inventory_start
     globals.data = globals.data[:match] + id_to_write + globals.data[match + 14 :]
@@ -1728,7 +1750,7 @@ class SearchableCombobox(ttk.Frame):
 
 class SaveEditorGUI:
     def __init__(self, root):
-        global loadout_handler
+        global loadout_handler, inventory_handler
         # ttk Style setting
         style = ttk.Style()
         style.configure('Add.TButton', foreground='green', font=('Arial', 10, 'bold'))
@@ -3918,9 +3940,9 @@ class SaveEditorGUI:
         ttk.Button(controls_frame, text="📤 Export to Excel", command=self.export_relics).pack(side='left', padx=5)
         ttk.Button(controls_frame, text="📥 Import from Excel", command=self.import_relics).pack(side='left', padx=5)
         ttk.Button(controls_frame, text="🗑️ Delete All Illegal", command=self.delete_all_illegal,
-                  style='Danger.TButton')  # .pack(side='left', padx=5)
+                  style='Danger.TButton').pack(side='left', padx=5)
         ttk.Button(controls_frame, text="🗑️ Mass Delete Selected", command=self.mass_delete_relics,
-                  style='Danger.TButton')  # .pack(side='left', padx=5)
+                  style='Danger.TButton').pack(side='left', padx=5)
         ttk.Button(controls_frame, text="🔧 Mass Fix", command=self.mass_fix_incorrect_ids).pack(side='left', padx=5)
 
         # ===========Language Combobox========================
@@ -3959,7 +3981,6 @@ class SaveEditorGUI:
         ttk.Label(legend_frame, text="Orange = Unique Relic (don't edit)", foreground="#FF8C00").pack(side='left', padx=5)
         ttk.Label(legend_frame, text="Teal = Strict Invalid", foreground="#008080").pack(side='left', padx=5)
 
-        
         # Search frame - Row 1: Basic search and filters
         search_frame = ttk.Frame(self.inventory_tab)
         search_frame.pack(fill='x', padx=10, pady=5)
@@ -4086,7 +4107,7 @@ class SaveEditorGUI:
         
         ttk.Button(action_frame, text="Modify Selected", command=self.modify_selected_relic).pack(side='left', padx=5)
         ttk.Button(action_frame, text="Delete Selected", style='Danger.TButton',
-                   command=self.delete_selected_relic)  # .pack(side='left', padx=5)
+                   command=self.delete_selected_relic).pack(side='left', padx=5)
         
         # Selection controls
         selection_frame = ttk.Frame(action_frame)
@@ -4252,6 +4273,9 @@ class SaveEditorGUI:
 
             # Parse items
             gaprint(globals.data)
+            inventory_handler = InventoryHandler()
+            inventory_handler.parse()
+            inventory_handler.debug_print()
 
             # Parse Vessels and Presets
             loadout_handler = LoadoutHandler(data_source, ga_relic)
