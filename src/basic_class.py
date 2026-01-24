@@ -83,6 +83,211 @@ class Item:
                    unk_2, offset, extra=padding, size=size)
 
 
+class ItemState:
+    BASE_SIZE = 8
+
+    def __init__(self):
+        self.ga_handle = 0
+        self.instance_id = 0
+        self.item_id = 0xffffffff
+        self.real_item_id = 0x00ffffff
+        self.type_bits = 0
+        self.data: bytearray = bytearray(
+            int(0xffffffff00000000).to_bytes(8, 'little'))
+        self.size = 8
+
+    @classmethod
+    def create_dummy_relic(cls, instance_id):
+        dummy_relic = cls()
+        dummy_relic.ga_handle = 0xC0000000 | (instance_id & 0x00FFFFFF)
+        dummy_relic.item_id = 0x80000000 | (100 & 0x00FFFFFF)
+        dummy_relic.instance_id = instance_id
+        dummy_relic.real_item_id = 100
+        dummy_relic.type_bits = ITEM_TYPE_RELIC
+        dummy_relic.size = 80
+        _padding = bytes([
+            0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0xFF,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF,
+            0xFF, 0xFF, 0xFF, 0xFF
+        ])
+
+        _data: bytearray = bytearray()
+        _data.extend([
+            dummy_relic.ga_handle.to_bytes(4, 'little'),  # ga_handle
+            dummy_relic.item_id.to_bytes(4, 'little'),  # item_id : real_id->100 Delicate Burning Scene
+            dummy_relic.item_id.to_bytes(4, 'little'),  # durability (same as item_id when item is a relic)
+            int(0xffffffff).to_bytes(4, 'little'),  # unk_1
+            int(7000000).to_bytes(4, 'little'),  # effect_1: Vigor + 1(id: 7000000)
+            int(0xffffffff).to_bytes(4, 'little'),  # effect_2
+            int(0xffffffff).to_bytes(4, 'little'),  # effect_3
+            _padding,  # padding
+            int(0xffffffff).to_bytes(4, 'little'),  # curse_1
+            int(0xffffffff).to_bytes(4, 'little'),  # curse_2
+            int(0xffffffff).to_bytes(4, 'little'),  # curse_3
+            int(0xffffffff).to_bytes(4, 'little'),  # unk_2
+            int(0).to_bytes(8, 'little')  # end_padding
+        ])
+        dummy_relic.data = _data
+        return dummy_relic
+
+    def from_bytes(self, user_data: bytearray, offset=0):
+        data_len = len(user_data)
+
+        # Check if we have enough data for the base read
+        if offset + self.BASE_SIZE > data_len:
+            raise ValueError("Invalid data length. Save File may be corrupted.")
+
+        self.ga_handle, self.item_id = struct.unpack_from("<II", user_data, offset)
+        self.type_bits = self.ga_handle & 0xF0000000
+        self.instance_id = self.ga_handle & 0x00FFFFFF
+        self.real_item_id = self.item_id & 0x00FFFFFF
+        cursor = offset
+
+        if self.ga_handle != 0:
+            if self.type_bits == ITEM_TYPE_WEAPON:
+                if cursor + 88 > data_len:
+                    raise ValueError("Invalid data length. Save File may be corrupted.")
+                self.size = 88
+                self.data = user_data[cursor:cursor+self.size]
+            elif self.type_bits == ITEM_TYPE_ARMOR:
+                if cursor + 16 > data_len:
+                    raise ValueError("Invalid data length. Save File may be corrupted.")
+                self.size = 16
+                self.data = user_data[cursor:cursor+self.size]
+            elif self.type_bits == ITEM_TYPE_RELIC:
+                if cursor + 80 > data_len:
+                    raise ValueError("Invalid data length. Save File may be corrupted.")
+                self.size = 80
+                self.data = user_data[cursor:cursor+self.size]
+
+    @property
+    def durability(self):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            return None
+        return struct.unpack_from("<I", self.data, 8)[0]
+
+    @durability.setter
+    def durability(self, value):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            raise TypeError("Durability can only be set for relics")
+        struct.pack_into("<I", self.data, 8, value)
+
+    @property
+    def unk_1(self):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            return None
+        return struct.unpack_from("<I", self.data, 12)[0]
+
+    @unk_1.setter
+    def unk_1(self, value):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            raise TypeError("Unk_1 can only be set for relics")
+        struct.pack_into("<I", self.data, 12, value)
+
+    @property
+    def effect_1(self):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            return None
+        return struct.unpack_from("<I", self.data, 16)[0]
+
+    @effect_1.setter
+    def effect_1(self, value):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            raise TypeError("Effect_1 can only be set for relics")
+        struct.pack_into("<I", self.data, 16, value)
+
+    @property
+    def effect_2(self):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            return None
+        return struct.unpack_from("<I", self.data, 20)[0]
+
+    @effect_2.setter
+    def effect_2(self, value):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            raise TypeError("Effect_2 can only be set for relics")
+        struct.pack_into("<I", self.data, 20, value)
+
+    @property
+    def effect_3(self):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            return None
+        return struct.unpack_from("<I", self.data, 24)[0]
+
+    @effect_3.setter
+    def effect_3(self, value):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            raise TypeError("Effect_3 can only be set for relics")
+        struct.pack_into("<I", self.data, 24, value)
+
+    @property
+    def curse_1(self):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            return None
+        return struct.unpack_from("<I", self.data, 56)[0]
+
+    @curse_1.setter
+    def curse_1(self, value):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            raise TypeError("Curse_1 can only be set for relics")
+        struct.pack_into("<I", self.data, 56, value)
+
+    @property
+    def curse_2(self):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            return None
+        return struct.unpack_from("<I", self.data, 60)[0]
+
+    @curse_2.setter
+    def curse_2(self, value):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            raise TypeError("Curse_2 can only be set for relics")
+        struct.pack_into("<I", self.data, 60, value)
+
+    @property
+    def curse_3(self):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            return None
+        return struct.unpack_from("<I", self.data, 64)[0]
+
+    @curse_3.setter
+    def curse_3(self, value):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            raise TypeError("Curse_3 can only be set for relics")
+        struct.pack_into("<I", self.data, 64, value)
+
+    @property
+    def unk_2(self):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            return None
+        return struct.unpack_from("<I", self.data, 68)[0]
+
+    @unk_2.setter
+    def unk_2(self, value):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            raise TypeError("Unk_2 can only be set for relics")
+        struct.pack_into("<I", self.data, 68, value)
+
+    def __repr__(self):
+        return f"ItemState(ga_handle=0x{self.ga_handle:08X}, item_id=0x{self.item_id:08X}, instance_id={self.instance_id}, real_item_id={self.real_item_id}, type_bits=0x{self.type_bits:08X}, size={self.size})"
+
+
+class ItemEntry:
+    def __init__(self, data_bytes: bytearray):
+        if len(data_bytes) != 14:
+            raise ValueError("Invalid data length")
+        self.ga_handle = struct.unpack_from("<I", data_bytes, 0)[0]
+        self.type_bits = self.ga_handle & 0xF0000000
+        self.item_id = self.ga_handle & 0x00FFFFFF
+        self.item_amount = struct.unpack_from("<I", data_bytes, 4)[0]
+        self.acquisition_id = struct.unpack_from("<I", data_bytes, 8)[0]
+        self.is_favorite = bool(data_bytes[12])
+        self.is_sellable = bool(data_bytes[13])
+
+    def __repr__(self):
+        return f"ItemEntry(ga_handle=0x{self.ga_handle:08X}, item_id={self.item_id}, item_amount={self.item_amount}, acquisition_id={self.acquisition_id}, is_favorite={self.is_favorite}, is_sellable={self.is_sellable})"
+
+
 class AttachEffect:
     def __init__(self, effect_df: pd.DataFrame, name_df: pd.DataFrame, effect_id: int):
         self._data_frame = effect_df[effect_df.index == effect_id]
