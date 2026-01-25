@@ -111,22 +111,21 @@ class ItemState:
             0xFF, 0xFF, 0xFF, 0xFF
         ])
 
-        _data: bytearray = bytearray()
-        _data.extend([
-            dummy_relic.ga_handle.to_bytes(4, 'little'),  # ga_handle
-            dummy_relic.item_id.to_bytes(4, 'little'),  # item_id : real_id->100 Delicate Burning Scene
-            dummy_relic.item_id.to_bytes(4, 'little'),  # durability (same as item_id when item is a relic)
-            int(0xffffffff).to_bytes(4, 'little'),  # unk_1
-            int(7000000).to_bytes(4, 'little'),  # effect_1: Vigor + 1(id: 7000000)
-            int(0xffffffff).to_bytes(4, 'little'),  # effect_2
-            int(0xffffffff).to_bytes(4, 'little'),  # effect_3
-            _padding,  # padding
-            int(0xffffffff).to_bytes(4, 'little'),  # curse_1
-            int(0xffffffff).to_bytes(4, 'little'),  # curse_2
-            int(0xffffffff).to_bytes(4, 'little'),  # curse_3
-            int(0xffffffff).to_bytes(4, 'little'),  # unk_2
-            int(0).to_bytes(8, 'little')  # end_padding
-        ])
+        _data: bytearray = bytearray(80)
+        struct.pack_into("<I", _data, 0, dummy_relic.ga_handle)  # ga_handle
+        struct.pack_into("<I", _data, 4, dummy_relic.item_id)  # item_id : real_id->100 Delicate Burning Scene
+        struct.pack_into("<I", _data, 8, dummy_relic.item_id)  # durability (same as item_id when item is a relic)
+        struct.pack_into("<I", _data, 12, int(0xffffffff))  # unk_1
+        struct.pack_into("<I", _data, 16, int(7000000))  # effect_1: Vigor + 1(id: 7000000)
+        struct.pack_into("<I", _data, 20, int(0xffffffff))  # effect_2
+        struct.pack_into("<I", _data, 24, int(0xffffffff))  # effect_3
+        _data = _data[:28] + _padding + _data[28+len(_padding):]  # add padding
+        struct.pack_into("<I", _data, 56, int(0xffffffff))  # curse_1
+        struct.pack_into("<I", _data, 60, int(0xffffffff))  # curse_2
+        struct.pack_into("<I", _data, 64, int(0xffffffff))  # curse_3
+        struct.pack_into("<I", _data, 68, int(0xffffffff))  # unk_2
+        struct.pack_into("<Q", _data, 72, int(0))  # 8 bytes end_padding
+
         dummy_relic.data = _data
         return dummy_relic
 
@@ -283,6 +282,27 @@ class ItemEntry:
         self.acquisition_id = struct.unpack_from("<I", data_bytes, 8)[0]
         self.is_favorite = bool(data_bytes[12])
         self.is_sellable = bool(data_bytes[13])
+
+    @classmethod
+    def create_from_state(cls, state: ItemState, acquisition_id: int):
+        entry = cls(bytearray(14))
+        entry.ga_handle = state.ga_handle
+        entry.item_id = state.item_id
+        entry.item_amount = 1
+        entry.acquisition_id = acquisition_id
+        entry.is_favorite = False
+        entry.is_sellable = True
+        return entry
+
+    @property
+    def data_bytes(self):
+        _data = bytearray(14)
+        struct.pack_into("<I", _data, 0, self.ga_handle)
+        struct.pack_into("<I", _data, 4, self.item_amount)
+        struct.pack_into("<I", _data, 8, self.acquisition_id)
+        _data[12] = int(self.is_favorite)
+        _data[13] = int(self.is_sellable)
+        return _data
 
     def __repr__(self):
         return f"ItemEntry(ga_handle=0x{self.ga_handle:08X}, item_id={self.item_id}, item_amount={self.item_amount}, acquisition_id={self.acquisition_id}, is_favorite={self.is_favorite}, is_sellable={self.is_sellable})"
