@@ -290,8 +290,8 @@ class ItemEntry:
         entry.item_id = state.item_id
         entry.item_amount = 1
         entry.acquisition_id = acquisition_id
-        entry.is_favorite = False
-        entry.is_sellable = True
+        entry.is_favorite = True
+        entry.is_sellable = False
         return entry
 
     @property
