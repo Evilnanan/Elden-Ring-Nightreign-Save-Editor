@@ -79,7 +79,7 @@ class SourceDataHandler:
                     cls._instance = super(SourceDataHandler, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, language: str = "en_US"):
+    def __init__(self, language: str = get_system_language()):
         if self._initialized:
             return
         with self._lock:
