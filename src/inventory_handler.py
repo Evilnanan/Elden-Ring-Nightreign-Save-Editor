@@ -2,6 +2,7 @@ import struct
 from basic_class import ItemEntry, ItemState
 import globals
 import logging
+import threading
 
 
 logger = logging.getLogger(__name__)
@@ -20,24 +21,39 @@ def insert_padding_area():
 
 
 class InventoryHandler:
+    _instance = None
+    _lock = threading.Lock()
+    _initialized = False
+
     START_OFFEST = 0x14
     STATE_SLOT_COUNT = 5120
     ENTRY_SLOT_COUNT = 3065
     STATE_SLOT_KEEP_COUNT = 84
 
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super(InventoryHandler, cls).__new__(cls)
+        return cls._instance
+
     def __init__(self):
-        self.states: list[ItemState] = []
-        self.entries: list[ItemEntry] = []
-        self.relics: dict[int, ItemEntry] = {}
-        self.player_name_offset = 0
-        self.entry_count_offset = 0
-        self.entry_offset = 0
-        self.entry_count = 0
-        self.vessels = [9600, 9603, 9606, 9609, 9612, 9615, 9618, 9621, 9900, 9910]  # Hero Default
-        self.ga_to_acquisition_id = {}
-        self._cur_last_instance_id = 0x800054  # start instance id
-        self._cur_last_acquisition_id = 0
-        self._cur_last_state_index = 0
+        if self._initialized:
+            return
+        with self._lock:
+            self._initialized = True
+            self.states: list[ItemState] = []
+            self.entries: list[ItemEntry] = []
+            self.relics: dict[int, ItemEntry] = {}
+            self.player_name_offset = 0
+            self.entry_count_offset = 0
+            self.entry_offset = 0
+            self.entry_count = 0
+            self.vessels = [9600, 9603, 9606, 9609, 9612, 9615, 9618, 9621, 9900, 9910]  # Hero Default
+            self.ga_to_acquisition_id = {}
+            self._cur_last_instance_id = 0x800054  # start instance id
+            self._cur_last_acquisition_id = 0
+            self._cur_last_state_index = 0
 
     @classmethod
     def get_player_name_from_data(cls, data):
