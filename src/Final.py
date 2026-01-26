@@ -5337,6 +5337,8 @@ class ModifyRelicDialog:
         """Load relic data into the dialog"""
         self.ga_handle = ga_handle
         self.item_id = item_id
+        # Initialize silence function 'auto find id' to false for each load.
+        self.block_auto_find_id = False
 
         # Get current effects
         self.current_effects = self.get_current_effects()
@@ -6165,6 +6167,8 @@ class ModifyRelicDialog:
         updating the relic ID when needed (e.g., when an effect that needs
         a curse is selected).
         """
+        if self.block_auto_find_id:
+            return
         try:
             # Get current effects from the entry fields
             current_effects = []
@@ -6517,6 +6521,8 @@ class ModifyRelicDialog:
     def on_item_selected(self, item_id):
         """Callback when item is selected from search"""
         self.item_id_var.set(str(item_id))
+        # Disables 'auto find id' after a relic is manually selected.
+        self.block_auto_find_id = True
         self.update_debug_info()
     
     def on_effect_selected(self, effect_index, effect_id):
