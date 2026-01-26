@@ -445,7 +445,7 @@ class LoadoutHandler:
         self._initialized = True
         self.game_data = SourceDataHandler()
         self.inventory = InventoryHandler()
-        self.parser = VesselParser(self.game_data)
+        self.parser = VesselParser()
         self.modifier = VesselModifier()
         self.validator = Validator()
         self.all_presets = []
