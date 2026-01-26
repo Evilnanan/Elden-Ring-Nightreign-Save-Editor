@@ -92,8 +92,7 @@ class ItemState:
         self.item_id = 0xffffffff
         self.real_item_id = 0x00ffffff
         self.type_bits = 0
-        self.data: bytearray = bytearray(
-            int(0xffffffff00000000).to_bytes(8, 'little'))
+        self.data: bytearray = bytes.fromhex('00000000FFFFFFFF')
         self.size = 8
 
     @classmethod
@@ -158,6 +157,14 @@ class ItemState:
                     raise ValueError("Invalid data length. Save File may be corrupted.")
                 self.size = 80
                 self.data = user_data[cursor:cursor+self.size]
+
+    def set_real_id(self, real_id):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            raise TypeError("Real ID can only be set for relics")
+        self.real_item_id = real_id
+        self.item_id = self.real_item_id | 0x80000000
+        struct.pack_into("<I", self.data, 4, self.item_id)
+        self.durability = self.item_id
 
     @property
     def durability(self):
@@ -267,11 +274,24 @@ class ItemState:
             raise TypeError("Unk_2 can only be set for relics")
         struct.pack_into("<I", self.data, 68, value)
 
+    @property
+    def effects_and_curses(self):
+        if self.type_bits != ITEM_TYPE_RELIC:
+            return None
+        return [self.effect_1, self.effect_2, self.effect_3, self.curse_1, self.curse_2, self.curse_3]
+
     def __repr__(self):
         return f"ItemState(ga_handle=0x{self.ga_handle:08X}, item_id=0x{self.item_id:08X}, instance_id={self.instance_id}, real_item_id={self.real_item_id}, type_bits=0x{self.type_bits:08X}, size={self.size})"
 
 
 class ItemEntry:
+    # First 4 bytes: Item count
+    # Followed by ItemEntry structures (Base size 14 bytes):
+    # - 4 bytes: ga_handle, Composite LE (Byte 0: Type 0xB0=Goods, 0xC0=Relics etc. Bytes 1-3: ID)
+    # - 4 bytes: item_quantity, 0xB00003E9 -> GoodsId = 1001, Flask of Crimson Tears Default Quantity is 3
+    # - 4 bytes: acquisition ID, Unique, this value does not repeat across all item entries.
+    # - 1 byte: bool -> is favorite
+    # - 1 byte: bool -> is sellable, if favorite, unique relic, equipped will be false
     def __init__(self, data_bytes: bytearray):
         if len(data_bytes) != 14:
             raise ValueError("Invalid data length")
@@ -282,6 +302,7 @@ class ItemEntry:
         self.acquisition_id = struct.unpack_from("<I", data_bytes, 8)[0]
         self.is_favorite = bool(data_bytes[12])
         self.is_sellable = bool(data_bytes[13])
+        self.state: ItemState = None
 
     @classmethod
     def create_from_state(cls, state: ItemState, acquisition_id: int):
@@ -303,6 +324,13 @@ class ItemEntry:
         _data[12] = int(self.is_favorite)
         _data[13] = int(self.is_sellable)
         return _data
+
+    @property
+    def is_relic(self):
+        return self.type_bits == ITEM_TYPE_RELIC
+
+    def link_state(self, state: ItemState):
+        self.state = state
 
     def __repr__(self):
         return f"ItemEntry(ga_handle=0x{self.ga_handle:08X}, item_id={self.item_id}, item_amount={self.item_amount}, acquisition_id={self.acquisition_id}, is_favorite={self.is_favorite}, is_sellable={self.is_sellable})"

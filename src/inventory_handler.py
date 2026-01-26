@@ -28,11 +28,13 @@ class InventoryHandler:
     def __init__(self):
         self.states: list[ItemState] = []
         self.entries: list[ItemEntry] = []
+        self.relics: dict[int, ItemEntry] = {}
         self.player_name_offset = 0
         self.entry_count_offset = 0
         self.entry_offset = 0
         self.entry_count = 0
         self.vessels = [9600, 9603, 9606, 9609, 9612, 9615, 9618, 9621, 9900, 9910]  # Hero Default
+        self.ga_to_acquisition_id = {}
         self._cur_last_instance_id = 0x800054  # start instance id
         self._cur_last_acquisition_id = 0
         self._cur_last_state_index = 0
@@ -66,11 +68,14 @@ class InventoryHandler:
         logger.info("Parsing inventory data")
         self.__init__()
         cur_offset = self.START_OFFEST
+        state_ga_to_index = {}
         logger.info("Parsing inventory states. Starting at offset: 0x%X", cur_offset)
         for i in range(self.STATE_SLOT_COUNT):
             state = ItemState()
             state.from_bytes(globals.data, cur_offset)
             self.states.append(state)
+            if state.ga_handle != 0:
+                state_ga_to_index[state.ga_handle] = i
             self._cur_last_instance_id = max(self._cur_last_instance_id, state.instance_id)
             self._cur_last_state_index = i if state.ga_handle != 0 else self._cur_last_state_index
             cur_offset += state.size
@@ -93,8 +98,12 @@ class InventoryHandler:
                 self.vessels.append(entry.item_id)
             cur_offset += 14
             if entry.ga_handle != 0:
+                self.ga_to_acquisition_id[entry.ga_handle] = entry.acquisition_id
                 self.entry_count += 1
             self._cur_last_acquisition_id = max(self._cur_last_acquisition_id, entry.acquisition_id)
+            if entry.is_relic:
+                entry.link_state(self.states[state_ga_to_index[entry.ga_handle]])
+                self.relics[entry.item_id] = entry
 
         count_in_data = struct.unpack_from("<I", globals.data, self.entry_count_offset)[0]
         if self.entry_count != count_in_data:
@@ -179,7 +188,7 @@ class InventoryHandler:
         logger.info(f"Updating entry count in inventory from {self.entry_count} to {self.entry_count - 1}")
         self.entry_count -= 1
         struct.pack_into("<I", globals.data, self.entry_count_offset, self.entry_count)
-        logger.info("Removed relic at entry index %d")
+        logger.info("Removed relic at entry index %d", target_entry_index)
 
         # Replace target state by 0
         logger.info("Removing relic at state index %d", target_state_index)
@@ -193,6 +202,50 @@ class InventoryHandler:
         logger.info("Removed relic at state index %d", target_state_index)
         self._cur_last_state_index = target_state_index-1
         self.parse()  # Just make sure everything is fine
+        return True
+
+    def update_relic_state(self, state_index):
+        logger.info("Updating relic state")
+        # Only relics can have their state updated
+        if self.states[state_index].type_bits != globals.ITEM_TYPE_RELIC:
+            raise TypeError("Only relics can have their state updated")
+
+        # Assume item type wasn't change
+        target_offset = self.START_OFFEST + sum(state.size for state in self.states[:state_index])
+        globals.data = globals.data[:target_offset] + self.states[state_index].data + globals.data[target_offset + self.states[state_index].size:]
+        self.parse()  # Just make sure everything is fine
+
+    def modify_relic(self, ga_handle, relic_id=None,
+                     effect_1=None, effect_2=None, effect_3=None,
+                     curse_1=None, curse_2=None, curse_3=None):
+        type_bits = ga_handle & 0xF0000000
+        if type_bits != globals.ITEM_TYPE_RELIC:
+            raise TypeError("Only relics can be modified")
+
+        logger.info("Modifying relic in inventory")
+        target_state_index = -1
+        for i in range(self.STATE_SLOT_KEEP_COUNT, self.STATE_SLOT_COUNT):
+            if self.states[i].ga_handle == ga_handle:
+                target_state_index = i
+                if relic_id is not None:
+                    self.states[target_state_index].set_real_id(relic_id)
+                if effect_1 is not None:
+                    self.states[target_state_index].effect_1 = effect_1
+                if effect_2 is not None:
+                    self.states[target_state_index].effect_2 = effect_2
+                if effect_3 is not None:
+                    self.states[target_state_index].effect_3 = effect_3
+                if curse_1 is not None:
+                    self.states[target_state_index].curse_1 = curse_1
+                if curse_2 is not None:
+                    self.states[target_state_index].curse_2 = curse_2
+                if curse_3 is not None:
+                    self.states[target_state_index].curse_3 = curse_3
+                break
+        else:
+            raise ValueError("Relic not found in inventory")
+        self.update_relic_state(target_state_index)
+        return True
 
     def debug_print(self, non_zero_only=False):
         for i, state in enumerate(self.states):
