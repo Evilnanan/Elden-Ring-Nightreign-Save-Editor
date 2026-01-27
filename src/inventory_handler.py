@@ -204,11 +204,11 @@ class InventoryHandler:
                     self.vessels.append(entry.item_id)
                 cur_offset += 14
                 if entry.ga_handle != 0:
-                    self.ga_to_acquisition_id[entry.ga_handle] = entry.acquisition_id
                     self.entry_count += 1
                 self._cur_last_acquisition_id = max(self._cur_last_acquisition_id, entry.acquisition_id)
                 if entry.is_relic:
                     entry.link_state(self.states[state_ga_to_index[entry.ga_handle]])
+                    self.ga_to_acquisition_id[entry.ga_handle] = entry.acquisition_id
                     self.relics[entry.ga_handle] = entry
                     self.relic_gas.append(entry.ga_handle)
 
@@ -265,6 +265,8 @@ class InventoryHandler:
             globals.data = globals.data[:_cur_offset] + _new_state_data + globals.data[_cur_offset + old_size:]
             remove_padding_area()
             logger.info("Added relic at state index %d", empty_state_index)
+            logger.info(f"New Relic State Info:{repr(dummy_relic)}")
+            logger.info(f"New Relic Entry Info:{repr(self.entries[empty_entry_index])}")
             self._cur_last_state_index = empty_state_index
             self.parse()  # Just make sure everything is fine
             return True, self.entries[empty_entry_index].ga_handle

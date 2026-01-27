@@ -3812,6 +3812,9 @@ class SaveEditorGUI:
         self.tree.tag_configure('strict_invalid', foreground='#008080', font=('Arial', 9))  # Teal for strict invalid
         self.tree.tag_configure('deep', foreground='#9999BB')  # Subtle color for deep relics, no background
 
+        # sort filtered relics by acquisition rank
+        filtered_relics.sort(key=lambda r: r.get('acquisition_rank', 0), reverse=True)
+
         # Populate treeview with filtered results
         for relic in filtered_relics:
             is_deep = relic.get('is_deep', False)
