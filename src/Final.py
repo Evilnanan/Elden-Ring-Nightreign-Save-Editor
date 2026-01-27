@@ -993,7 +993,11 @@ class SaveEditorGUI:
         style = ttk.Style()
         style.configure('Add.TButton', foreground='green', font=('Arial', 10, 'bold'))
         style.configure('Danger.TButton', foreground='red', font=('Arial', 10))
-        
+        style.configure('NormalRelic.TButton', foreground='#016151',
+                        font=('Arial', 10, 'bold'))
+        style.configure('DeepRelic.TButton', foreground='#694fff',
+                        font=('Arial', 10, 'bold'))
+
         self.game_data = SourceDataHandler()
         self.relic_checker = RelicChecker()
         self.inventory_handler = InventoryHandler()
@@ -3494,7 +3498,7 @@ class SaveEditorGUI:
             # Parse items
             self.inventory_handler = InventoryHandler()
             self.inventory_handler.parse()
-            self.inventory_handler.debug_print()
+            self.inventory_handler.debug_relic_print()
 
             # Parse Vessels and Presets
             loadout_handler = LoadoutHandler()
@@ -4326,10 +4330,13 @@ class SaveEditorGUI:
                 "Warning", "No save file loaded. Please open a save file first."
             )
             return
+        relic_type_selector = RelicTypeSelector(self.root)
+        if not relic_type_selector.result:
+            return
         try:
-            self.inventory_handler.debug_print(non_zero_only=True)
-            added_result, new_ga = self.inventory_handler.add_relic_to_inventory()
-            self.inventory_handler.debug_print(non_zero_only=True)
+            added_result, new_ga = self.inventory_handler.add_relic_to_inventory(
+                relic_type=relic_type_selector.result
+            )
             if added_result:
                 messagebox.showinfo("Success", "Dummy relic added. Refreshing inventory.")
                 self.refresh_inventory_and_vessels()
@@ -5899,6 +5906,7 @@ class SearchDialog:
             checkbox_lock_color = ttk.Checkbutton(color_row, variable=self.lock_color_var,
                                                 onvalue=True, offvalue=False, text="Lock color:")
             cur_color = self.game_data.relics[self.item_id].color
+            cur_type = "Deep" if self.game_data.relics[self.item_id].is_deep() else "Normal"
             
             self.color_var = tk.StringVar(value=cur_color)
             self.color_int_var = 0
@@ -5920,7 +5928,7 @@ class SearchDialog:
             type_row = ttk.Frame(filter_frame)
             type_row.pack(fill='x', padx=5, pady=5)
             ttk.Label(type_row, text="Relic Type:").pack(side='left', padx=(19, 5))
-            self.relic_type_var = tk.StringVar(value="All")
+            self.relic_type_var = tk.StringVar(value=cur_type)
             combobox_type = ttk.Combobox(type_row, textvariable=self.relic_type_var, values=["All", "Deep", "Normal"],
                                          width=10, state="readonly")
             combobox_type.pack(side='left', padx=5)
@@ -5928,7 +5936,7 @@ class SearchDialog:
             
             # Structure filters
             ttk.Label(filter_frame, text="Effect Slots:").pack(anchor='w', pady=(10, 0))
-            self.effect_slots_var = tk.StringVar(value="Any")
+            self.effect_slots_var = tk.StringVar(value="3")
             ttk.Radiobutton(filter_frame, text="Any", variable=self.effect_slots_var, value="Any", command=self.filter_results).pack(anchor='w')
             ttk.Radiobutton(filter_frame, text="1 Effect", variable=self.effect_slots_var, value="1", command=self.filter_results).pack(anchor='w')
             ttk.Radiobutton(filter_frame, text="2 Effects", variable=self.effect_slots_var, value="2", command=self.filter_results).pack(anchor='w')
@@ -6003,6 +6011,66 @@ class SearchDialog:
         
         self.callback(int(item_id))
         self.dialog.destroy()
+
+
+import tkinter as tk
+from tkinter import ttk
+
+class RelicTypeSelector(tk.Toplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("Select Relic Type")
+        self.result = None
+        
+        self.resizable(False, False)
+        
+        main_frame = ttk.Frame(self, padding="10 10 10 10")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        ttk.Label(main_frame, 
+                  text="Select relic type to create.\nNote: Type cannot be changed later.", 
+                  justify=tk.CENTER).pack(pady=10)
+        
+        btn_frame = ttk.Frame(main_frame)
+        btn_frame.pack(pady=5)
+        
+        ttk.Button(btn_frame, text="Normal", 
+                  command=lambda: self.set_result("normal"),
+                  style='NormalRelic.TButton').pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Deep", 
+                  command=lambda: self.set_result("deep"),
+                  style="DeepRelic.TButton").pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Cancel", 
+                  command=lambda: self.set_result(None)).pack(side=tk.LEFT, padx=5)
+
+        self.protocol("WM_DELETE_WINDOW", lambda: self.set_result(None))
+        
+        self.center_window(parent)
+        self.focus_force()
+
+        self.transient(parent)
+        self.grab_set()
+        self.wait_window(self)
+
+    def center_window(self, parent):
+        self.update_idletasks()
+        
+        w = self.winfo_width()
+        h = self.winfo_height()
+        
+        parent_w = parent.winfo_width()
+        parent_h = parent.winfo_height()
+        parent_x = parent.winfo_x()
+        parent_y = parent.winfo_y()
+        
+        x = parent_x + (parent_w // 2) - (w // 2)
+        y = parent_y + (parent_h // 2) - (h // 2)
+        
+        self.geometry(f'+{x}+{y}')
+
+    def set_result(self, value):
+        self.result = value
+        self.destroy()
 
 
 def main():

@@ -1,6 +1,7 @@
 import struct
 from basic_class import ItemEntry, ItemState
 from relic_checker import RelicChecker, InvalidReason, is_curse_invalid
+from source_data_handler import SourceDataHandler
 import globals
 import logging
 import threading
@@ -217,11 +218,12 @@ class InventoryHandler:
                 logger.info("Updating entry count in")
                 struct.pack_into("<I", globals.data, self.entry_count_offset, self.entry_count)
 
-    def add_relic_to_inventory(self):
+    def add_relic_to_inventory(self, relic_type: str = "normal"):
         with self._lock:
             logger.info("Adding relic to inventory")
             # Create dummy relic state first
-            dummy_relic = ItemState.create_dummy_relic(self.aquire_new_instance_id())
+            dummy_relic = ItemState.create_dummy_relic(self.aquire_new_instance_id(),
+                                                       relic_type=relic_type)
             # Replace Item Entry at empty slot
             empty_entry_index = -1
             for i in range(self.ENTRY_SLOT_COUNT):
@@ -392,3 +394,12 @@ class InventoryHandler:
         logger.debug(f"Last Instance ID: {self._cur_last_instance_id}")
         logger.debug(f"Last Acquisition ID: {self._cur_last_acquisition_id}")
         logger.debug(f"Last State Index: {self._cur_last_state_index}")
+
+    def debug_relic_print(self):
+        game_data = SourceDataHandler()  # Singleton
+        for ga_handle, entry in self.relics.items():
+            relic_id = entry.state.real_item_id
+            relic_name = game_data.relics[relic_id].name
+            relic_effects = entry.state.effects_and_curses
+            relic_effects_names = [game_data.effects[effect].name for effect in relic_effects]
+            logger.debug(f"Relic GA: 0x{ga_handle:X}, ID: {relic_id}, Name: {relic_name}, Effects/Curses: {relic_effects_names}")

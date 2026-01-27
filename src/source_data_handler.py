@@ -102,6 +102,7 @@ class SourceDataHandler:
                 [
                     "ID",
                     "relicColor",
+                    "isDeepRelic",
                     "attachEffectTableId_1",
                     "attachEffectTableId_2",
                     "attachEffectTableId_3",
