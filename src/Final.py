@@ -4556,6 +4556,7 @@ class ModifyRelicDialog:
         self.dialog.title("Modify Relic")
         self.dialog.geometry("700x600")
         self.dialog.transient(parent)
+        self._set_position(parent)
 
         self.safe_mode_var = tk.BooleanVar(value=True)
         self.game_data = SourceDataHandler()
@@ -4564,6 +4565,29 @@ class ModifyRelicDialog:
         
         self.setup_ui()
         self.load_relic(ga_handle, item_id)
+        
+    def _set_position(self, parent):
+        parent.update_idletasks()
+        self.dialog.update_idletasks()
+        
+        p_w = parent.winfo_width()
+        p_h = parent.winfo_height()
+        p_x = parent.winfo_x()
+        p_y = parent.winfo_y()
+        
+        d_w = self.dialog.winfo_width()
+        screen_width = self.dialog.winfo_screenwidth()
+        
+        target_x = p_x + p_w + 20
+        target_y = p_y
+        
+        if target_x + d_w > screen_width:
+            target_x = p_x - d_w - 20
+            
+        if target_x < 0:
+            target_x = 0
+
+        self.dialog.geometry(f"+{target_x}+{target_y}")
     
     def load_relic(self, ga_handle, item_id):
         """Load relic data into the dialog"""
@@ -5864,7 +5888,32 @@ class SearchDialog:
         self.dialog.transient(parent)
         self.dialog.grab_set()
         
+        self._set_position(parent)
+        
         self.setup_ui()
+        
+    def _set_position(self, parent):
+        parent.update_idletasks()
+        self.dialog.update_idletasks()
+        
+        p_w = parent.winfo_width()
+        p_h = parent.winfo_height()
+        p_x = parent.winfo_x()
+        p_y = parent.winfo_y()
+        
+        d_w = self.dialog.winfo_width()
+        screen_width = self.dialog.winfo_screenwidth()
+        
+        target_x = p_x + 350
+        target_y = p_y
+        
+        if target_x + d_w > screen_width:
+            target_x = p_x - d_w - 50
+            
+        if target_x < 0:
+            target_x = 0
+
+        self.dialog.geometry(f"+{target_x}+{target_y}")
     
     def setup_ui(self):
         # Search entry
