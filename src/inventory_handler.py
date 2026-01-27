@@ -44,6 +44,9 @@ class InventoryHandler:
         if self._initialized:
             return
         with self._lock:
+            self.illegal_gas = []
+            self.curse_illegal_gas = []  # Track relics illegal due to missing curses
+            self.strict_invalid_gas = []
             self.initialize()
 
     def initialize(self):
@@ -65,10 +68,7 @@ class InventoryHandler:
         self._cur_last_acquisition_id = 0
         self._cur_last_state_index = 0
 
-        self.illegal_gas = []
-        self.curse_illegal_gas = []  # Track relics illegal due to missing curses
         self.relic_gas = []
-        self.strict_invalid_gas = []
 
     @classmethod
     def get_player_name_from_data(cls, data):
@@ -143,6 +143,7 @@ class InventoryHandler:
             self.strict_invalid_gas.remove(ga)
 
     def update_illegal(self, ga_handle, item_id, source_effects):
+        logger.info(f"Update Illegal gas: 0x{ga_handle:08X}, {item_id}")
         checker = RelicChecker()
         invalid_reason = checker.check_invalidity(item_id, source_effects)
         if invalid_reason and ga_handle not in self.illegal_gas:
