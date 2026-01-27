@@ -201,7 +201,7 @@ def parse_items(data_type, start_offset, slot_count=5120):
 # ga_acquisition_order = {}
 # Replaced by InventoryHandler.ga_to_acquisition_id
 
-
+# gaprint has been replaced by InventoryHandler for a more Pythonic implementation.
 def gaprint(data_type):
     global ga_relic, ga_items
     ga_items = []
@@ -3492,7 +3492,6 @@ class SaveEditorGUI:
                 globals.data = bytearray(f.read())  # Use bytearray for in-place modifications
 
             # Parse items
-            gaprint(globals.data)
             self.inventory_handler = InventoryHandler()
             self.inventory_handler.parse()
             self.inventory_handler.debug_print()
@@ -3577,8 +3576,7 @@ class SaveEditorGUI:
             messagebox.showinfo("Success", "Sigs updated successfully")
             
     def reparse(self):
-        # Parse items - this updates ga_relic with current data
-        gaprint(globals.data)
+        # Parse items - this updates inventory with current data
         self.inventory_handler.parse()
 
         # Re-parse vessel assignments
@@ -3609,10 +3607,9 @@ class SaveEditorGUI:
         
         # Store all relic data for filtering
         self.all_relics = []
-        global ga_relic
         # Populate treeview
-        for idx, (ga, id, e1, e2, e3, se1, se2, se3, offset, size) in enumerate(ga_relic):
-            real_id = id - 2147483648
+        for idx, ga in enumerate(self.inventory_handler.relic_gas):
+            real_id = self.inventory_handler.relics[ga].state.real_item_id
             
             # Get item name and color
             _item = self.game_data.relics[real_id]
@@ -3620,7 +3617,7 @@ class SaveEditorGUI:
             item_color = _item.color if _item else "Unknown"
             
             # Get effect names
-            effects = [e1, e2, e3, se1, se2, se3]
+            effects = self.inventory_handler.relics[ga].state.effects_and_curses
             effect_names = []
             
             for eff_id in effects:
@@ -3948,17 +3945,17 @@ class SaveEditorGUI:
         item_id = int(tags[1])
 
         # Find the relic data
-        for ga, id, e1, e2, e3, se1, se2, se3, offset, size in ga_relic:
-            real_id = id - 2147483648
-            if ga == ga_handle and real_id == item_id:
-                effects = [e1, e2, e3, se1, se2, se3]
-                _item = self.game_data.relics.get(item_id)
-                item_name = _item.name if _item else f"Unknown ({item_id})"
-                self.clipboard_effects = (effects, real_id, item_name)
-                messagebox.showinfo("Copied", f"Copied effects from:\n{item_name}\n\nEffects: {len([e for e in effects if e != 0])} effect(s)")
-                return
-
-        messagebox.showerror("Error", "Could not find relic data")
+        
+        try:
+            real_id = self.inventory_handler.relics[ga_handle].state.real_item_id
+            effects = self.inventory_handler.relics[ga_handle].state.effects_and_curses
+            _item = self.game_data.relics.get(item_id)
+            item_name = _item.name if _item else f"Unknown ({item_id})"
+            self.clipboard_effects = (effects, real_id, item_name)
+            messagebox.showinfo("Copied", f"Copied effects from:\n{item_name}\n\nEffects: {len([e for e in effects if e != 0])} effect(s)")
+            return
+        except KeyError:
+            messagebox.showerror("Error", "Could not find relic data")
 
     def paste_relic_effects(self):
         """Paste copied effects to selected relic"""
@@ -4179,9 +4176,10 @@ class SaveEditorGUI:
         fixable_strict = []
         unfixable_relics = []
 
-        for ga, id, e1, e2, e3, se1, se2, se3, offset, size in ga_relic:
-            real_id = id - 2147483648
-            effects = [e1, e2, e3, se1, se2, se3]
+        for ga in self.inventory_handler.relic_gas:
+            item_id = self.inventory_handler.relics[ga].state.item_id
+            real_id = self.inventory_handler.relics[ga].state.real_item_id
+            effects = self.inventory_handler.relics[ga].state.effects_and_curses
 
             # Skip unique relics
             if real_id in RelicChecker.UNIQUENESS_IDS:
@@ -4200,7 +4198,7 @@ class SaveEditorGUI:
                 # First try strictly valid (best outcome)
                 strict_order = self.relic_checker.get_strictly_valid_order(real_id, effects)
                 if strict_order:
-                    fixable_illegal.append((ga, id, real_id, real_id, item_name, f"{item_name} (reorder)", strict_order, False))
+                    fixable_illegal.append((ga, item_id, real_id, real_id, item_name, f"{item_name} (reorder)", strict_order, False))
                     continue
 
                 # Try finding a different ID that's strictly valid
@@ -4210,7 +4208,7 @@ class SaveEditorGUI:
                     new_name = _valid_relic.name if _valid_relic else f"Unknown ({valid_id})"
                     strict_order = self.relic_checker.get_strictly_valid_order(valid_id, effects)
                     if strict_order and not self.relic_checker.check_invalidity(valid_id, strict_order):
-                        fixable_illegal.append((ga, id, real_id, valid_id, item_name, new_name, strict_order, False))
+                        fixable_illegal.append((ga, item_id, real_id, valid_id, item_name, new_name, strict_order, False))
                         continue
 
                 # Fall back to just valid (not strictly valid)
@@ -4219,9 +4217,9 @@ class SaveEditorGUI:
                     _valid_relic = self.game_data.relics.get(valid_id)
                     new_name = _valid_relic.name if _valid_relic else f"Unknown ({valid_id})"
                     if valid_id == real_id:
-                        fixable_illegal.append((ga, id, real_id, valid_id, item_name, f"{new_name} (reorder)", effects, True))
+                        fixable_illegal.append((ga, item_id, real_id, valid_id, item_name, f"{new_name} (reorder)", effects, True))
                     else:
-                        fixable_illegal.append((ga, id, real_id, valid_id, item_name, new_name, effects, True))
+                        fixable_illegal.append((ga, item_id, real_id, valid_id, item_name, new_name, effects, True))
                     continue
 
                 unfixable_relics.append((real_id, item_name, "illegal", "No valid ID found"))
@@ -4231,7 +4229,7 @@ class SaveEditorGUI:
                 # Try strictly valid permutation for current ID
                 strict_order = self.relic_checker.get_strictly_valid_order(real_id, effects)
                 if strict_order:
-                    fixable_strict.append((ga, id, real_id, real_id, item_name, f"{item_name} (reorder)", strict_order, False))
+                    fixable_strict.append((ga, item_id, real_id, real_id, item_name, f"{item_name} (reorder)", strict_order, False))
                     continue
 
                 # Try finding a different ID that's strictly valid
@@ -4241,7 +4239,7 @@ class SaveEditorGUI:
                     new_name = _valid_relic.name if _valid_relic else f"Unknown ({valid_id})"
                     strict_order = self.relic_checker.get_strictly_valid_order(valid_id, effects)
                     if strict_order and not self.relic_checker.check_invalidity(valid_id, strict_order):
-                        fixable_strict.append((ga, id, real_id, valid_id, item_name, new_name, strict_order, False))
+                        fixable_strict.append((ga, item_id, real_id, valid_id, item_name, new_name, strict_order, False))
                         continue
 
                 unfixable_relics.append((real_id, item_name, "strict", "No valid permutation found"))
@@ -4268,7 +4266,7 @@ class SaveEditorGUI:
             details += f"Strict invalid relics: {len(fixable_strict)}\n"
         details += f"\nTotal: {len(fixable_relics)} relic(s) to fix:\n\n"
 
-        for i, (ga, id, old_id, new_id, old_name, new_name, effects, is_fallback) in enumerate(fixable_relics[:10]):
+        for i, (ga, item_id, old_id, new_id, old_name, new_name, effects, is_fallback) in enumerate(fixable_relics[:10]):
             marker = " ⚠️" if is_fallback else ""
             if old_id == new_id:
                 details += f"• {old_name} → reorder effects{marker}\n"
@@ -4290,7 +4288,7 @@ class SaveEditorGUI:
         fixed_count = 0
         failed_count = 0
 
-        for ga, id, old_id, new_id, old_name, new_name, new_effects, is_fallback in fixable_relics:
+        for ga, item_id, old_id, new_id, old_name, new_name, new_effects, is_fallback in fixable_relics:
             self.inventory_handler.parse()
             # Use sort_effects=True for fallback fixes (need sorting), False for strict fixes (already sorted)
             new_effects = self.relic_checker.sort_effects(new_effects) if is_fallback else new_effects
