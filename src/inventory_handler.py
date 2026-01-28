@@ -243,8 +243,7 @@ class ItemEntry:
     # - 4 bytes: item_quantity, 0xB00003E9 -> GoodsId = 1001, Flask of Crimson Tears Default Quantity is 3
     # - 4 bytes: acquisition ID, Unique, this value does not repeat across all item entries.
     # - 1 byte: bool -> is favorite
-    # - 1 byte: bool -> is salable, if favorite, unique relic, equipped will be false
-    # Note Last bytes may not salable， New Guess is 'is_new'
+    # - 1 byte: bool -> is new relic, if favorite, equipped will be false
     def __init__(self, data_bytes: bytearray):
         if len(data_bytes) != 14:
             raise ValueError("Invalid data length")
@@ -254,7 +253,7 @@ class ItemEntry:
         self.item_amount = struct.unpack_from("<I", data_bytes, 4)[0]
         self.acquisition_id = struct.unpack_from("<I", data_bytes, 8)[0]
         self.is_favorite = bool(data_bytes[12])
-        self.is_salable = bool(data_bytes[13])
+        self.is_new = bool(data_bytes[13])
         self.state: ItemState = None
         self.equipped_by: list[int] = [0] * 10
 
@@ -266,7 +265,7 @@ class ItemEntry:
         entry.item_amount = 1
         entry.acquisition_id = acquisition_id
         entry.is_favorite = True
-        entry.is_salable = False
+        entry.is_new = False
         return entry
 
     @property
@@ -276,28 +275,32 @@ class ItemEntry:
         struct.pack_into("<I", _data, 4, self.item_amount)
         struct.pack_into("<I", _data, 8, self.acquisition_id)
         _data[12] = int(self.is_favorite)
-        _data[13] = int(self.is_salable)
+        _data[13] = int(self.is_new)
         return _data
 
     @property
     def is_relic(self):
         return self.type_bits == ITEM_TYPE_RELIC
 
+    @property
+    def equipped_hero_types(self) -> list[int]:
+        result = []
+        for i in range(10):
+            if self.equipped_by[i] > 0:
+                result.append(i + 1)
+        return result
+
     def link_state(self, state: ItemState):
         self.state = state
 
     def equip(self, hero_type: Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]):
         self.equipped_by[hero_type-1] += 1
-        self.is_salable = False
 
     def unequip(self, hero_type: Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]):
-        game_data = SourceDataHandler()
         self.equipped_by[hero_type-1] -= 1
-        self.is_salable = all([game_data.relics[self.state.real_item_id].is_salable(),
-                               sum(self.equipped_by) == 0, not self.is_favorite])
 
     def __repr__(self):
-        return f"ItemEntry(ga_handle=0x{self.ga_handle:08X}, item_id={self.instance_id}, item_amount={self.item_amount}, acquisition_id={self.acquisition_id}, is_favorite={self.is_favorite}, is_sellable={self.is_salable})"
+        return f"ItemEntry(ga_handle=0x{self.ga_handle:08X}, item_id={self.instance_id}, item_amount={self.item_amount}, acquisition_id={self.acquisition_id}, is_favorite={self.is_favorite}, is_new={self.is_new})"
 
 
 class InventoryHandler:
@@ -674,6 +677,16 @@ class InventoryHandler:
     def sigs(self, value):
         struct.pack_into("<I", globals.data, self.sigs_offset, value)
 
+    def reset_equipped_records(self):
+        for entry in self.entries:
+            entry.equipped_by = [0] * 10
+
+    def get_relic_equipped_by(self, ga_handle):
+        try:
+            return self.relics[ga_handle].equipped_hero_types
+        except KeyError:
+            return []
+
     def debug_print(self, non_zero_only=False):
         for i, state in enumerate(self.states):
             if state.ga_handle == 0 and non_zero_only:
@@ -700,14 +713,6 @@ class InventoryHandler:
             relic_effects_names = [game_data.effects[effect].name for effect in relic_effects]
             logger.debug(f"Relic GA: 0x{ga_handle:X}, ID: {relic_id}, Name: {relic_name}, Effects/Curses: {relic_effects_names}")
 
-    def debug_check_salable_state(self):
-        game_data = SourceDataHandler()  # Singleton
-        sorted_entries = [entry for entry in self.relics.values()]
-        sorted_entries.sort(key=lambda x: x.acquisition_id)
-        for idx, entry in enumerate(sorted_entries):
-            ga_handle = entry.ga_handle
-            theory_salable = all([game_data.relics[entry.state.real_item_id].is_salable(),
-                                  sum(entry.equipped_by) == 0, not entry.is_favorite])
-            compare_result = "Correct" if theory_salable == entry.is_salable else "Incorrect"
-            if theory_salable != entry.is_salable:
-                logger.debug(f"#{idx+1} {compare_result}, Relic GA: 0x{ga_handle:X}, Salable: {entry.is_salable}, Theory: {theory_salable}, Data: {entry.data_bytes.hex()}")
+    def debug_entry_print(self):
+        for entry in self.relics.values():
+            logger.debug(f"Entry: {repr(entry)}")
