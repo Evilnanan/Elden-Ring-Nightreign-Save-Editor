@@ -61,12 +61,13 @@ class AttachEffect:
         if self._is_empty_id:
             return "Empty"
         elif self._is_unknown:
-            return "Unlnown"
+            return "Unknown"
         else:
             try:
                 row = self._name_df[self._name_df["id"] == self.text_id]
                 if not row.empty:
                     return row["text"].values[0]
+                return "Unknown"
             except Exception:
                 return "Unknown"
 
@@ -124,6 +125,7 @@ class Relic:
                 row = self._name_df[self._name_df["id"] == self.id]
                 if not row.empty:
                     return row["text"].values[0]
+                return "Unknown"
             except Exception:
                 return "Unknown"
 
@@ -202,6 +204,7 @@ class Vessel:
                 row = self._name_df[self._name_df["id"] == goods_id]
                 if not row.empty:
                     return row["text"].values[0]
+                return "Unknown"
             except Exception:
                 return "Unknown"
 
@@ -255,7 +258,7 @@ class Vessel:
             return slots
         except Exception:
             return (-1, -1, -1, -1, -1, -1)
-        
+
     @property
     def slot_colors(self):
         if self.is_unknown:
