@@ -363,8 +363,7 @@ class AttachEffect:
         else:
             try:
                 row = self._name_df[self._name_df["id"] == self.text_id]
-                if not row.empty:
-                    return row["text"].values[0]
+                return row["text"].values[0]
             except Exception:
                 return "Unknown"
 
@@ -415,8 +414,7 @@ class Relic:
         else:
             try:
                 row = self._name_df[self._name_df["id"] == self.id]
-                if not row.empty:
-                    return row["text"].values[0]
+                return row["text"].values[0]
             except Exception:
                 return "Unknown"
 
@@ -493,8 +491,7 @@ class Vessel:
             try:
                 goods_id = self._df["goodsId"].values[0]
                 row = self._name_df[self._name_df["id"] == goods_id]
-                if not row.empty:
-                    return row["text"].values[0]
+                return row["text"].values[0]
             except Exception:
                 return "Unknown"
 
