@@ -359,7 +359,7 @@ class AttachEffect:
         if self._is_empty_id:
             return "Empty"
         elif self._is_unknown:
-            return "Unlnown"
+            return "Unknown"
         else:
             try:
                 row = self._name_df[self._name_df["id"] == self.text_id]
