@@ -141,6 +141,7 @@ class VesselParser:
                     if r not in self.relic_ga_hero_map:
                         self.relic_ga_hero_map[r] = set()
                     self.relic_ga_hero_map[r].add(assigned_id)
+                    self.inventory.equip_relic(r, hero_type)
 
             if assigned_id in heroes:
                 heroes[assigned_id].vessels.append({
@@ -194,6 +195,7 @@ class VesselParser:
                     if r not in self.relic_ga_hero_map:
                         self.relic_ga_hero_map[r] = set()
                     self.relic_ga_hero_map[r].add(h_id)
+                    self.inventory.equip_relic(r, hero_type)
 
             timestamp = struct.unpack_from("<Q", globals.data, cursor)[0]  # not sure
             cursor += 8
