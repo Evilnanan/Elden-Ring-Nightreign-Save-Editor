@@ -2945,7 +2945,7 @@ class SaveEditorGUI:
             equipped_hero_types = self.inventory_handler.get_relic_equipped_by(ga)
             match equipped_by:
                 case 'None':
-                    if equipped_hero_types != 0:
+                    if len(equipped_hero_types) != 0:
                         continue
                 case 'Other Characters':
                     if hero_type in equipped_hero_types or not equipped_hero_types:
@@ -3207,6 +3207,7 @@ class SaveEditorGUI:
         ttk.Label(legend_frame, text="Purple = Missing Curse", foreground="#800080").pack(side='left', padx=5)
         ttk.Label(legend_frame, text="Orange = Unique Relic (don't edit)", foreground="#FF8C00").pack(side='left', padx=5)
         ttk.Label(legend_frame, text="Teal = Strict Invalid", foreground="#008080").pack(side='left', padx=5)
+        ttk.Label(legend_frame, text="Yellow BG = Favorite", background="#FFFF00", foreground="black").pack(side='left', padx=5)
 
         # Search frame - Row 1: Basic search and filters
         search_frame = ttk.Frame(self.inventory_tab)
@@ -3251,7 +3252,7 @@ class SaveEditorGUI:
         # Status filter
         ttk.Label(search_frame, text="⚠️ Status:").pack(side='left', padx=(10, 2))
         self.status_filter_var = tk.StringVar(value="All")
-        status_options = ["All", "Valid", "Illegal", "Curse Illegal", "Forbidden", "Strict Invalid", "Deep Only"]
+        status_options = ["All", "Valid", "Illegal", "Curse Illegal", "Forbidden", "Strict Invalid", "Deep Only", "Favorite Only"]
         self.status_filter_combo = ttk.Combobox(search_frame, textvariable=self.status_filter_var,
                                                  values=status_options, state="readonly", width=12)
         self.status_filter_combo.pack(side='left', padx=2)
@@ -3602,7 +3603,7 @@ class SaveEditorGUI:
         # Forbidden relics are marked orange and shouldn't count as "illegal" - ignore
         # Unique Relic with wrong Effects should be count as "illegal"
 
-        # Update illegal count label (only count non-forbidden illegal relics)
+        # Update illegal count label
         if self.inventory_handler.illegal_count > 0:
             self.illegal_count_label.config(text=f"⚠️ {self.inventory_handler.illegal_count} Illegal Relic(s) Found")
         else:
@@ -3648,6 +3649,9 @@ class SaveEditorGUI:
             # Check if this is a deep relic (ID range 2000000-2019999)
             is_deep = 2000000 <= real_id <= 2019999
 
+            # Check if this is marked as favorite
+            is_favorite = self.inventory_handler.relics[ga].is_favorite
+
             # Determine tag
             tag_list = [ga, real_id]
             if is_forbidden and is_illegal:
@@ -3660,6 +3664,8 @@ class SaveEditorGUI:
                 tag_list.append('illegal')
             elif is_strict_invalid:
                 tag_list.append('strict_invalid')
+            if is_favorite:
+                tag_list.append('favorite')
 
             # Get acquisition order from inventory section (matches in-game sorting)
             # Lower number = acquired earlier (oldest)
@@ -3683,7 +3689,8 @@ class SaveEditorGUI:
                 'is_illegal': is_illegal,
                 'is_curse_illegal': is_curse_illegal,
                 'is_strict_invalid': is_strict_invalid,
-                'both': is_forbidden and is_illegal
+                'both': is_forbidden and is_illegal,
+                'is_favorite': is_favorite
             })
 
         # Calculate acquisition rank (1, 2, 3...) based on acquisition_index
@@ -3799,6 +3806,8 @@ class SaveEditorGUI:
                     passes_status = relic.get('is_strict_invalid', False)
                 elif status_filter == "Deep Only":
                     passes_status = relic.get('is_deep', False)
+                elif status_filter == "Favorite Only":
+                    passes_status = relic.get('is_favorite', False)
 
             if passes_search and passes_char and passes_color and passes_status:
                 filtered_relics.append(relic)
@@ -3809,7 +3818,9 @@ class SaveEditorGUI:
         self.tree.tag_configure('curse_illegal', foreground='#9932CC', font=('Arial', 9, 'bold'))
         self.tree.tag_configure('illegal', foreground='red', font=('Arial', 9, 'bold'))
         self.tree.tag_configure('strict_invalid', foreground='#008080', font=('Arial', 9))  # Teal for strict invalid
-        self.tree.tag_configure('deep', foreground='#9999BB')  # Subtle color for deep relics, no background
+        self.tree.tag_configure('deep', foreground="#172752")  # Subtle color for deep relics, no background
+        self.tree.tag_configure('favorite', background="#FAFF6E")  # Yellow background for favorite relics
+
 
         # sort filtered relics by acquisition rank
         filtered_relics.sort(key=lambda r: r.get('acquisition_rank', 0), reverse=True)
@@ -3925,8 +3936,11 @@ class SaveEditorGUI:
             self.tree.selection_set(item)
 
             menu = tk.Menu(self.root, tearoff=0)
+            menu.add_command(label="💛 Toggle Favorite", command=self.toggle_favorite)
+            menu.add_separator()
             menu.add_command(label="Modify", command=self.modify_selected_relic)
-            menu.add_command(label="Delete", command=self.delete_selected_relic)
+            menu.add_command(label="Delete", foreground="red", font=('Arial', 9, 'bold'),
+                             command=self.delete_selected_relic)
             menu.add_separator()
             menu.add_command(label="📋 Copy Effects", command=self.copy_relic_effects)
 
@@ -3937,6 +3951,18 @@ class SaveEditorGUI:
             menu.add_command(label=paste_label, command=self.paste_relic_effects,
                            state='normal' if self.clipboard_effects else 'disabled')
             menu.post(event.x_root, event.y_root)
+
+    def toggle_favorite(self):
+        """Toggle favorite status of selected relic"""
+        selection = self.tree.selection()
+        if not selection:
+            messagebox.showwarning("Warning", "No relic selected")
+            return
+        item = selection[0]
+        tags = self.tree.item(item, 'tags')
+        ga_handle = int(tags[0])
+        self.inventory_handler.toggle_favorite_mark(ga_handle)
+        self.refresh_inventory_and_vessels()
 
     def copy_relic_effects(self):
         """Copy effects from selected relic to clipboard"""
