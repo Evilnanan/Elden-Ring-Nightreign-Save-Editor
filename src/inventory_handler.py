@@ -714,6 +714,20 @@ class InventoryHandler:
         except KeyError:
             raise ValueError("Relic not found in inventory")
 
+    def toggle_favorite_mark(self, ga_handle):
+        try:
+            cur_favorite = self.relics[ga_handle].is_favorite
+            if cur_favorite:
+                self.relics[ga_handle].mark_unfavorite()
+            else:
+                self.relics[ga_handle].mark_favorite()
+            for idx, entry in enumerate(self.entries):
+                if entry.ga_handle == ga_handle:
+                    self.update_entry_data(idx)
+            return self.relics[ga_handle].is_favorite
+        except KeyError:
+            raise ValueError("Relic not found in inventory")
+
     def debug_print(self, non_zero_only=False):
         for i, state in enumerate(self.states):
             if state.ga_handle == 0 and non_zero_only:
