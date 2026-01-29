@@ -586,7 +586,7 @@ class SourceDataHandler:
             )
 
     def get_pool_effects(self, pool_id: int):
-        logger.info(f"Getting effects for pool {pool_id}")
+        logger.debug(f"Getting effects for pool {pool_id}")
         if pool_id == -1:
             return []
         _effects = self.effect_table[self.effect_table["ID"] == pool_id]
@@ -604,7 +604,7 @@ class SourceDataHandler:
         rollable weight in ANY of the three deep pools, since the game appears
         to allow effects to roll on any deep relic if they're valid in any deep pool.
         """
-        logger.info(f"Getting rollable effects for pool {pool_id}")
+        logger.debug(f"Getting rollable effects for pool {pool_id}")
         if pool_id == -1:
             return []
 
@@ -629,7 +629,7 @@ class SourceDataHandler:
         Use this for strict validation to detect effects that are valid in some
         deep pool but not in the specific pool assigned to a relic.
         """
-        logger.info(f"Getting strict effects for pool {pool_id}")
+        logger.debug(f"Getting strict effects for pool {pool_id}")
         if pool_id == -1:
             return []
         _effects = self.effect_table[self.effect_table["ID"] == pool_id]
@@ -638,13 +638,13 @@ class SourceDataHandler:
 
     def get_effect_pools(self, effect_id: int):
         """Get all pool IDs that contain a specific effect."""
-        logger.info(f"Getting pools for effect {effect_id}")
+        logger.debug(f"Getting pools for effect {effect_id}")
         _pools = self.effect_table[self.effect_table["attachEffectId"] == effect_id]
         return _pools["ID"].values.tolist()
 
     def get_effect_rollable_pools(self, effect_id: int):
         """Get all pool IDs where this effect can actually roll (chanceWeight != 0)."""
-        logger.info(f"Getting rollable pools for effect {effect_id}")
+        logger.debug(f"Getting rollable pools for effect {effect_id}")
         _rows = self.effect_table[self.effect_table["attachEffectId"] == effect_id]
         # Filter out rows where chanceWeight is 0 (cannot roll)
         _rollable = df_filter_zero_chanceWeight(_rows)
@@ -654,7 +654,7 @@ class SourceDataHandler:
         """Check if an effect only exists in deep relic pools (2000000, 2100000, 2200000)
         plus its own dedicated pool (effect_id == pool_id).
         These effects require curses when used on multi-effect relics."""
-        logger.info(f"Checking if effect {effect_id} is deep-only")
+        logger.debug(f"Checking if effect {effect_id} is deep-only")
         if effect_id in [-1, 0, 4294967295]:
             return False
         pools = self.get_effect_pools(effect_id)
@@ -674,7 +674,7 @@ class SourceDataHandler:
         We check rollable pools (weight != -65536) because an effect may be listed
         in a pool but with weight -65536 meaning it can't actually roll there.
         """
-        logger.info(f"Checking if effect {effect_id} needs a curse")
+        logger.debug(f"Checking if effect {effect_id} needs a curse")
         if effect_id in [-1, 0, 4294967295]:
             return False
 
@@ -710,7 +710,7 @@ class SourceDataHandler:
         If it does, assign the next available curse pool ID.
         If it doesn't, assign -1.
         """
-        logger.info(f"Getting adjusted pool sequence for relic {relic_id}")
+        logger.debug(f"Getting adjusted pool sequence for relic {relic_id}")
         effs = effects[:3]
         pool_ids = self.relics[relic_id].effect_slots
         curse_pools = pool_ids[3:]
@@ -723,7 +723,7 @@ class SourceDataHandler:
         return new_pool_ids
 
     def get_relic_slot_count(self, relic_id: int) -> tuple[int, int]:
-        logger.info(f"Getting relic slot count for relic {relic_id}")
+        logger.debug(f"Getting relic slot count for relic {relic_id}")
         pool_seq: list = self.relics[relic_id].effect_slots
         effect_slot = pool_seq[:3]
         curse_slot = pool_seq[3:]
