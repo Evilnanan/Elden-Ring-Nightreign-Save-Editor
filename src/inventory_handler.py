@@ -243,7 +243,7 @@ class ItemEntry:
     # - 4 bytes: item_quantity, 0xB00003E9 -> GoodsId = 1001, Flask of Crimson Tears Default Quantity is 3
     # - 4 bytes: acquisition ID, Unique, this value does not repeat across all item entries.
     # - 1 byte: bool -> is favorite
-    # - 1 byte: bool -> is new relic, if favorite, equipped will be false
+    # - 1 byte: bool -> is new relic, if relic is marked as favorite or equipped by hero, this flag will be set false
     def __init__(self, data_bytes: bytearray):
         if len(data_bytes) != 14:
             raise ValueError("Invalid data length")
@@ -295,9 +295,17 @@ class ItemEntry:
 
     def equip(self, hero_type: Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]):
         self.equipped_by[hero_type-1] += 1
+        self.is_new = False
 
     def unequip(self, hero_type: Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]):
         self.equipped_by[hero_type-1] -= 1
+
+    def mark_favorite(self):
+        self.is_favorite = True
+        self.is_new = False
+
+    def mark_unfavorite(self):
+        self.is_favorite = False
 
     def __repr__(self):
         return f"ItemEntry(ga_handle=0x{self.ga_handle:08X}, item_id={self.instance_id}, item_amount={self.item_amount}, acquisition_id={self.acquisition_id}, is_favorite={self.is_favorite}, is_new={self.is_new})"
@@ -326,7 +334,7 @@ class InventoryHandler:
         if self._initialized:
             return
         with self._lock:
-            self.illegal_gas = []
+            self.illegal_gas = []  # Track relic changes to prevent redundant full-set validity checks.
             self.curse_illegal_gas = []  # Track relics illegal due to missing curses
             self.strict_invalid_gas = []
             self.initialize()
@@ -338,8 +346,6 @@ class InventoryHandler:
             Excludes illegal_gas, curse_illegal_gas, and strict_invalid_gas.
             These should be initialized only once in __init__ or
             reset with set_illegal_relics.
-
-        :param self: 說明
         """
         self._initialized = True
         self.states: list[ItemState] = []
@@ -686,6 +692,27 @@ class InventoryHandler:
             return self.relics[ga_handle].equipped_hero_types
         except KeyError:
             return []
+
+    def equip_relic(self, ga_handle, hero_type):
+        try:
+            # Record flag changes to determine whether to update entry data.
+            old_new_flag = self.relics[ga_handle].is_new
+            self.relics[ga_handle].equip(hero_type)
+            new_new_flag = self.relics[ga_handle].is_new
+            if old_new_flag == new_new_flag:
+                # If is_new flag didn't change, no need to update
+                return
+            for idx, entry in enumerate(self.entries):
+                if entry.ga_handle == ga_handle:
+                    self.update_entry_data(idx)
+        except KeyError:
+            raise ValueError("Relic not found in inventory")
+
+    def unequip_relic(self, ga_handle, hero_type):
+        try:
+            self.relics[ga_handle].unequip(hero_type)
+        except KeyError:
+            raise ValueError("Relic not found in inventory")
 
     def debug_print(self, non_zero_only=False):
         for i, state in enumerate(self.states):

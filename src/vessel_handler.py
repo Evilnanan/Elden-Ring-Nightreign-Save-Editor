@@ -107,7 +107,7 @@ class VesselParser:
                         if r not in self.relic_ga_hero_map:
                             self.relic_ga_hero_map[r] = set()
                         self.relic_ga_hero_map[r].add(hero_type)
-                        self.inventory.relics[r].equip(hero_type)
+                        self.inventory.equip_relic(r, hero_type)
                 universal_vessels.append({
                     "vessel_id": v_id,
                     "relics": relics,
@@ -602,9 +602,9 @@ class LoadoutHandler:
             self.heroes[hero_type].vessels[vessel_index] = _new_vessel
             # Record relic equip/unequip
             if old_relic_ga != 0:
-                self.inventory.relics[old_relic_ga].unequip(hero_type)
+                self.inventory.unequip_relic(old_relic_ga, hero_type)
             if new_relic_ga != 0:
-                self.inventory.relics[new_relic_ga].equip(hero_type)
+                self.inventory.equip_relic(new_relic_ga, hero_type)
 
             if self.heroes[hero_type].cur_vessel_id == vessel_id:
                 self.validator.auto_adjust_cur_equipment(self.heroes, hero_type)
@@ -638,9 +638,9 @@ class LoadoutHandler:
             self.heroes[hero_type].presets[hero_preset_index]['relics'][relic_index] = new_relic_ga
         # Record relic equip/unequip
         if old_relic_ga != 0:
-            self.inventory.relics[old_relic_ga].unequip(hero_type)
+            self.inventory.unequip_relic(old_relic_ga, hero_type)
         if new_relic_ga != 0:
-            self.inventory.relics[new_relic_ga].equip(hero_type)
-  
+            self.inventory.equip_relic(new_relic_ga, hero_type)
+
         self.validator.auto_adjust_cur_equipment(self.heroes, hero_type)
         self.update_hero_loadout(hero_type)
