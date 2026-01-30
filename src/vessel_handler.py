@@ -42,6 +42,139 @@ class HeroLoadout:
             "timestamp": timestamp
         })
 
+    def auto_adjust_cur_equipment(self):
+        """
+        Automatically adjust the current preset index based on the current vessel's relics.
+        """
+        _new_preset_idx = 0xFF
+        for preset in self.presets:
+            if preset["vessel_id"] == self.cur_vessel_id and preset['relics'] == self.vessels[self.cur_vessel_id]["relics"]:
+                _new_preset_idx = preset["index"]
+                break
+        self.cur_preset_idx = _new_preset_idx
+
+    def get_export_data(self):
+        """
+        Retrieves and formats the current hero loadout for export.
+
+        This function processes the internal hero data and converts it into a
+        structured 'HeroLoadout' format suitable for storage.
+
+        Note:
+            The output data structure differs slightly from the import
+            format to ensure compatibility with storage requirements.
+
+        Returns:
+            dict: A dictionary representing the HeroLoadout structure,
+                optimized for saving.
+        """
+        inventory = InventoryHandler()  # InventoryHandler is a singleton Class
+        _vessels = []
+        _presets = []
+        _all_needed_relics = []
+        _all_needed_relics_ga = set()
+        for v in self.vessels:
+            _relics = []
+            for r in v["relics"]:
+                if r != 0:
+                    _relic = {
+                        "relic_id": r,
+                        "effect_1": inventory.relics[r].state.effect_1,
+                        "effect_2": inventory.relics[r].state.effect_2,
+                        "effect_3": inventory.relics[r].state.effect_3,
+                        "curse_1": inventory.relics[r].state.curse_1,
+                        "curse_2": inventory.relics[r].state.curse_2,
+                        "curse_3": inventory.relics[r].state.curse_3
+                        }
+                    if r not in _all_needed_relics_ga:
+                        _all_needed_relics_ga.add(r)
+                        _all_needed_relics.append(_relics)
+                    _relics.append(_relic)
+                else:
+                    _relics.append({
+                        "relic_id": r,
+                        "effect_1": 0xffffffff,
+                        "effect_2": 0xffffffff,
+                        "effect_3": 0xffffffff,
+                        "curse_1": 0xffffffff,
+                        "curse_2": 0xffffffff,
+                        "curse_3": 0xffffffff
+                    })
+            _vessels.append({
+                "vessel_id": v["vessel_id"],
+                "relics": _relics
+            })
+
+        for p in self.presets:
+            _relics = []
+            for r in p["relics"]:
+                if r != 0:
+                    _relic = {
+                        "relic_id": r,
+                        "effect_1": inventory.relics[r].state.effect_1,
+                        "effect_2": inventory.relics[r].state.effect_2,
+                        "effect_3": inventory.relics[r].state.effect_3,
+                        "curse_1": inventory.relics[r].state.curse_1,
+                        "curse_2": inventory.relics[r].state.curse_2,
+                        "curse_3": inventory.relics[r].state.curse_3
+                        }
+                    if r not in _all_needed_relics_ga:
+                        _all_needed_relics_ga.add(r)
+                        _all_needed_relics.append(_relics)
+                    _relics.append(_relic)
+                else:
+                    _relics.append({
+                        "relic_id": r,
+                        "effect_1": 0xffffffff,
+                        "effect_2": 0xffffffff,
+                        "effect_3": 0xffffffff,
+                        "curse_1": 0xffffffff,
+                        "curse_2": 0xffffffff,
+                        "curse_3": 0xffffffff
+                    })
+            _presets.append({
+                "name": p["name"],
+                "vessel_id": p["vessel_id"],
+                "relics": _relics
+            })
+
+        export_dict = {
+            "hero_type": self.hero_type,
+            "cur_preset_idx": self.cur_preset_idx,
+            "cur_vessel_id": self.cur_vessel_id,
+            "vessels": _vessels,
+            "presets": _presets,
+            "all_needed_relics": _all_needed_relics
+        }
+        return export_dict
+
+    def import_vessels(self, im_vessels: list):
+        """
+        Imports and restores vessel relic configurations from exported data.
+
+        This method MUST be executed after presets are imported to ensure
+        `auto_adjust_cur_equipment` can correctly synchronize the state.
+
+        Unlike the export process, the imported relic information must be
+        processed through the `InventoryHandler`. It performs a lookup to map
+        relic metadata back to their unique 'ga_handle' (int), which forms
+        the ordered list within each vessel.
+
+        Args:
+            im_vessels (list): A list of vessel dictionaries containing relic
+                info retrieved from an exported file (generated by `get_export_data`).
+
+        Note:
+            The mapping logic relies on the `InventoryHandler` to resolve the
+            relationship between serialized relic data and active 'ga_handle' IDs.
+        """
+        for im_v in im_vessels:
+            for v in self.vessels:
+                if v["vessel_id"] == im_v["vessel_id"]:
+                    v["relics"] = im_v["relics"]
+                    break
+        self.auto_adjust_cur_equipment()
+
 
 class VesselParser:
     # Items type
@@ -389,27 +522,6 @@ class Validator:
                     raise ValueError("Invalid item type")
         return True
 
-    def auto_adjust_cur_equipment(self, heroes: dict[int, HeroLoadout], hero_type: int):
-        """
-        Automatically adjust the current preset index based on the current vessel's relics.
-
-        Args:
-            heroes (dict[int, HeroLoadout]): heroes loadout that needs to be adjusted
-            hero_type (int): Specific hero type to adjust
-        """
-        cur_vessel_id = heroes[hero_type].cur_vessel_id
-        cur_vessel = None
-        for v in heroes[hero_type].vessels:
-            if v["vessel_id"] == cur_vessel_id:
-                cur_vessel = v
-                break
-        _new_preset_idx = 0xFF
-        for preset in heroes[hero_type].presets:
-            if preset["vessel_id"] == cur_vessel_id and preset['relics'] == cur_vessel["relics"]:
-                _new_preset_idx = preset["index"]
-                break
-        heroes[hero_type].cur_preset_idx = _new_preset_idx
-
     def heroes_structure_check(self, heroes: dict[int, HeroLoadout]):
         pass
 
@@ -584,7 +696,7 @@ class LoadoutHandler:
         self.heroes[hero_type].add_preset(**new_preset)
         self.all_presets = [p for h in self.heroes.values() for p in h.presets]
         self.all_presets.sort(key=lambda x: x["index"])
-        self.validator.auto_adjust_cur_equipment(self.heroes, hero_type)
+        self.heroes[hero_type].auto_adjust_cur_equipment()
         self.update_all_loadouts()
 
     def replace_vessel_relic(self, hero_type: int, vessel_id: int,
@@ -609,7 +721,7 @@ class LoadoutHandler:
                 self.inventory.equip_relic(new_relic_ga, hero_type)
 
             if self.heroes[hero_type].cur_vessel_id == vessel_id:
-                self.validator.auto_adjust_cur_equipment(self.heroes, hero_type)
+                self.heroes[hero_type].auto_adjust_cur_equipment()
             self.update_hero_loadout(hero_type)
 
     def replace_preset_relic(self, hero_type: int, relic_index: int, new_relic_ga,
@@ -644,5 +756,5 @@ class LoadoutHandler:
         if new_relic_ga != 0:
             self.inventory.equip_relic(new_relic_ga, hero_type)
 
-        self.validator.auto_adjust_cur_equipment(self.heroes, hero_type)
+        self.heroes[hero_type].auto_adjust_cur_equipment()
         self.update_hero_loadout(hero_type)
