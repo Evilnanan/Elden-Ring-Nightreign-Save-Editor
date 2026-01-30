@@ -6,6 +6,7 @@ from globals import ITEM_TYPE_RELIC, ITEM_TYPE_WEAPON, ITEM_TYPE_ARMOR
 import globals
 import logging
 import threading
+import pandas as pd
 
 
 logger = logging.getLogger(__name__)
@@ -351,6 +352,7 @@ class InventoryHandler:
         self.states: list[ItemState] = []
         self.entries: list[ItemEntry] = []
         self.relics: dict[int, ItemEntry] = {}
+        self.relics_df: pd.DataFrame = None  # Load data only if required
 
         self.player_name_offset = 0
         self.entry_count_offset = 0
@@ -727,6 +729,15 @@ class InventoryHandler:
             return self.relics[ga_handle].is_favorite
         except KeyError:
             raise ValueError("Relic not found in inventory")
+
+    def refresh_relics_dataframe(self):
+        cols = ['relic_id', 'effect_1', 'effect_2', 'effect_3',
+                'curse_1', 'curse_2', 'curse_3']
+        self.relics_df = pd.DataFrame(columns=cols)
+        for ga_handle, entry in self.relics.items():
+            relic_id = entry.state.real_item_id
+            effects = entry.state.effects_and_curses
+            self.relics_df.loc[len(self.relics_df)] = [relic_id] + effects
 
     def debug_print(self, non_zero_only=False):
         for i, state in enumerate(self.states):
