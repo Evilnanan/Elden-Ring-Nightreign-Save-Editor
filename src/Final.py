@@ -3089,33 +3089,35 @@ class SaveEditorGUI:
             return
 
         char_name = self.vessel_char_var.get()
-        loadout = get_character_loadout(char_name)
+        hero_type = self.vessel_char_combo.current()+1
 
-        # Convert to serializable format
-        save_data = {
-            'character': char_name,
-            'vessels': {}
-        }
+        # loadout = get_character_loadout(char_name)
 
-        for vessel_slot, vessel_info in loadout.items():
-            relics = vessel_info.get('relics', [])
-            vessel_relics = []
-            for ga, relic_info in relics:
-                if relic_info:
-                    vessel_relics.append({
-                        'ga': ga,
-                        'real_id': relic_info['real_id'],
-                        'name': relic_info['name'],
-                        'color': relic_info.get('color', 'Unknown'),
-                        'effects': relic_info['effects'],
-                        'curses': relic_info['curses']
-                    })
-                else:
-                    vessel_relics.append(None)
-            save_data['vessels'][str(vessel_slot)] = {
-                'unlocked': vessel_info.get('unlocked', False),
-                'relics': vessel_relics
-            }
+        # # Convert to serializable format
+        # save_data = {
+        #     'character': char_name,
+        #     'vessels': {}
+        # }
+
+        # for vessel_slot, vessel_info in loadout.items():
+        #     relics = vessel_info.get('relics', [])
+        #     vessel_relics = []
+        #     for ga, relic_info in relics:
+        #         if relic_info:
+        #             vessel_relics.append({
+        #                 'ga': ga,
+        #                 'real_id': relic_info['real_id'],
+        #                 'name': relic_info['name'],
+        #                 'color': relic_info.get('color', 'Unknown'),
+        #                 'effects': relic_info['effects'],
+        #                 'curses': relic_info['curses']
+        #             })
+        #         else:
+        #             vessel_relics.append(None)
+        #     save_data['vessels'][str(vessel_slot)] = {
+        #         'unlocked': vessel_info.get('unlocked', False),
+        #         'relics': vessel_relics
+        #     }
 
         # Ask for save location
         file_path = filedialog.asksaveasfilename(
@@ -3127,8 +3129,9 @@ class SaveEditorGUI:
 
         if file_path:
             try:
-                with open(file_path, 'w') as f:
-                    json.dump(save_data, f, indent=2)
+                self.loadout_handler.export_hero_loadout(hero_type, file_path)
+                # with open(file_path, 'w') as f:
+                #     json.dump(save_data, f, indent=2)
                 messagebox.showinfo("Success", f"Loadout saved to {file_path}")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to save loadout: {e}")
@@ -3148,24 +3151,28 @@ class SaveEditorGUI:
             return
 
         try:
-            with open(file_path, 'r') as f:
-                loadout_data = json.load(f)
+            result_msgs = self.loadout_handler.import_hero_loadout(file_path)
+            self.refresh_inventory_and_vessels()
+            messagebox.showinfo("Success", "\n".join(result_msgs))
 
-            # Show what will be loaded
-            char_name = loadout_data.get('character', 'Unknown')
-            vessels = loadout_data.get('vessels', {})
+            # with open(file_path, 'r') as f:
+            #     loadout_data = json.load(f)
 
-            # Build summary
-            summary_lines = [f"Loadout from: {char_name}", ""]
-            for vessel_slot, relics in vessels.items():
-                relic_names = [r['name'] if r else "(Empty)" for r in relics]
-                summary_lines.append(f"Vessel {vessel_slot}: {', '.join(relic_names[:3])}...")
+            # # Show what will be loaded
+            # char_name = loadout_data.get('character', 'Unknown')
+            # vessels = loadout_data.get('vessels', {})
 
-            summary = "\n".join(summary_lines[:10])
+            # # Build summary
+            # summary_lines = [f"Loadout from: {char_name}", ""]
+            # for vessel_slot, relics in vessels.items():
+            #     relic_names = [r['name'] if r else "(Empty)" for r in relics]
+            #     summary_lines.append(f"Vessel {vessel_slot}: {', '.join(relic_names[:3])}...")
 
-            messagebox.showinfo("Loadout Preview",
-                f"{summary}\n\nNote: Applying loadouts will be available in a future update.\n"
-                "Currently you can view and save loadouts.")
+            # summary = "\n".join(summary_lines[:10])
+
+            # messagebox.showinfo("Loadout Preview",
+            #     f"{summary}\n\nNote: Applying loadouts will be available in a future update.\n"
+            #     "Currently you can view and save loadouts.")
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load loadout: {e}")

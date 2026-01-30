@@ -1,11 +1,18 @@
+import datetime
+import os
 import struct
 import re
 from copy import deepcopy
+import orjson
+import logging
 from source_data_handler import SourceDataHandler
 from relic_checker import RelicChecker
 from inventory_handler import InventoryHandler, ItemEntry
 import globals
-from globals import ITEM_TYPE_RELIC, COLOR_MAP, get_now_timestamp
+from globals import ITEM_TYPE_RELIC, COLOR_MAP, get_now_timestamp, UNIQUENESS_IDS
+
+
+logger = logging.getLogger(__name__)
 
 
 def is_vessel_unlocked(vessel_id: int):
@@ -31,6 +38,7 @@ class HeroLoadout:
         self.offsets = offsets
 
     def add_preset(self, hero_type, index, name, vessel_id, relics, offsets, counter, timestamp):
+        inventory = InventoryHandler()  # InventoryHandler is a singleton Class
         self.presets.append({
             "hero_type": hero_type,
             "index": index,
@@ -41,14 +49,23 @@ class HeroLoadout:
             "counter": counter,
             "timestamp": timestamp
         })
+        for r in relics:
+            if (r & 0xF0000000) == ITEM_TYPE_RELIC and r != 0:
+                inventory.equip_relic(r, hero_type)
 
     def auto_adjust_cur_equipment(self):
         """
         Automatically adjust the current preset index based on the current vessel's relics.
         """
         _new_preset_idx = 0xFF
+        _vessel_idx = 0
+        for idx, v in enumerate(self.vessels):
+            if v["vessel_id"] == self.cur_vessel_id:
+                _vessel_idx = idx
+                break
+
         for preset in self.presets:
-            if preset["vessel_id"] == self.cur_vessel_id and preset['relics'] == self.vessels[self.cur_vessel_id]["relics"]:
+            if preset["vessel_id"] == self.cur_vessel_id and preset['relics'] == self.vessels[_vessel_idx]["relics"]:
                 _new_preset_idx = preset["index"]
                 break
         self.cur_preset_idx = _new_preset_idx
@@ -76,9 +93,9 @@ class HeroLoadout:
         for v in self.vessels:
             _relics = []
             for r in v["relics"]:
-                if r != 0:
+                if r != 0 and (r & 0xF0000000) == ITEM_TYPE_RELIC:
                     _relic = {
-                        "relic_id": r,
+                        "relic_id": inventory.relics[r].state.real_item_id,
                         "effect_1": inventory.relics[r].state.effect_1,
                         "effect_2": inventory.relics[r].state.effect_2,
                         "effect_3": inventory.relics[r].state.effect_3,
@@ -88,11 +105,11 @@ class HeroLoadout:
                         }
                     if r not in _all_needed_relics_ga:
                         _all_needed_relics_ga.add(r)
-                        _all_needed_relics.append(_relics)
+                        _all_needed_relics.append(_relic)
                     _relics.append(_relic)
                 else:
                     _relics.append({
-                        "relic_id": r,
+                        "relic_id": 0,
                         "effect_1": 0xffffffff,
                         "effect_2": 0xffffffff,
                         "effect_3": 0xffffffff,
@@ -108,9 +125,9 @@ class HeroLoadout:
         for p in self.presets:
             _relics = []
             for r in p["relics"]:
-                if r != 0:
+                if r != 0 and (r & 0xF0000000) == ITEM_TYPE_RELIC:
                     _relic = {
-                        "relic_id": r,
+                        "relic_id": inventory.relics[r].state.real_item_id,
                         "effect_1": inventory.relics[r].state.effect_1,
                         "effect_2": inventory.relics[r].state.effect_2,
                         "effect_3": inventory.relics[r].state.effect_3,
@@ -120,11 +137,11 @@ class HeroLoadout:
                         }
                     if r not in _all_needed_relics_ga:
                         _all_needed_relics_ga.add(r)
-                        _all_needed_relics.append(_relics)
+                        _all_needed_relics.append(_relic)
                     _relics.append(_relic)
                 else:
                     _relics.append({
-                        "relic_id": r,
+                        "relic_id": 0,
                         "effect_1": 0xffffffff,
                         "effect_2": 0xffffffff,
                         "effect_3": 0xffffffff,
@@ -140,7 +157,6 @@ class HeroLoadout:
 
         export_dict = {
             "hero_type": self.hero_type,
-            "cur_preset_idx": self.cur_preset_idx,
             "cur_vessel_id": self.cur_vessel_id,
             "vessels": _vessels,
             "presets": _presets,
@@ -168,12 +184,24 @@ class HeroLoadout:
             The mapping logic relies on the `InventoryHandler` to resolve the
             relationship between serialized relic data and active 'ga_handle' IDs.
         """
+        inventory = InventoryHandler()  # InventoryHandler is a singleton Class
+        result_msgs = []
         for im_v in im_vessels:
             for v in self.vessels:
                 if v["vessel_id"] == im_v["vessel_id"]:
+                    for r in v["relics"]:
+                        if r != 0:
+                            inventory.unequip_relic(r, self.hero_type)
                     v["relics"] = im_v["relics"]
+                    for r in v["relics"]:
+                        if r != 0:
+                            inventory.equip_relic(r, self.hero_type)
+                    result_msgs.append(f"Vessel {v['vessel_id']} imported successfully.")
                     break
+            else:
+                result_msgs.append(f"Vessel {im_v['vessel_id']} not found in hero loadout.")
         self.auto_adjust_cur_equipment()
+        return result_msgs
 
 
 class VesselParser:
@@ -758,3 +786,77 @@ class LoadoutHandler:
 
         self.heroes[hero_type].auto_adjust_cur_equipment()
         self.update_hero_loadout(hero_type)
+
+    def export_hero_loadout(self, hero_type: int, file_path: str):
+        # Export Json File with orjson package
+        json_bytes = orjson.dumps(self.heroes[hero_type].get_export_data(),
+                                  option=orjson.OPT_INDENT_2)
+        with open(file_path, "wb") as f:
+            f.write(json_bytes)
+
+    def import_hero_loadout(self, import_file_path: str):
+        with open(import_file_path, "rb") as f:
+            json_bytes = f.read()
+            import_data = orjson.loads(json_bytes)
+        hero_type = import_data["hero_type"]
+        # Set current vessel id
+        cur_vessel_id = import_data["cur_vessel_id"]
+        if self.validator.check_vessel_assignment(self.heroes, hero_type, cur_vessel_id):
+            self.heroes[hero_type].cur_vessel_id = cur_vessel_id
+        else:
+            logger.warning(f"Vessel {cur_vessel_id} is not assigned to hero {hero_type}.")
+            logger.warning("This Loadout file may be corrupted and not safe to use.")
+
+        # Check if All Needed Relic in Inventory
+        all_needed_relics = import_data["all_needed_relics"]
+        relic_info_to_ga_map = {}
+        self.inventory.refresh_relics_dataframe()
+        relics_df = self.inventory.relics_df
+        miss_unique_names = []
+        for needed_relic in all_needed_relics:
+            try:
+                ga_handle = relics_df[(relics_df['relic_id'] == needed_relic['relic_id']) &
+                                      (relics_df['effect_1'] == needed_relic['effect_1']) &
+                                      (relics_df['effect_2'] == needed_relic['effect_2']) &
+                                      (relics_df['effect_3'] == needed_relic['effect_3']) &
+                                      (relics_df['curse_1'] == needed_relic['curse_1']) &
+                                      (relics_df['curse_2'] == needed_relic['curse_2']) &
+                                      (relics_df['curse_3'] == needed_relic['curse_3'])]['ga_handle'].values[0]
+            except IndexError:
+                logger.info("Find needed relic not in inventory.")
+                ga_handle = 0
+                relic_id = needed_relic["relic_id"]
+                effects = [needed_relic["effect_1"], needed_relic["effect_2"], needed_relic["effect_3"]]
+                curses = [needed_relic["curse_1"], needed_relic["curse_2"], needed_relic["curse_3"]]
+                if self.game_data.relics.get(relic_id):
+                    if relic_id in UNIQUENESS_IDS:
+                        miss_unique_names.append(self.game_data.relics[relic_id].name)
+                        logger.warning(f"{self.game_data.relics[relic_id].name} is an unique relic and not in inventory.")
+                    else:
+                        logger.info("Found relic not in inventory, try to add it.")
+                        is_deep = self.game_data.relics[relic_id].is_deep()
+                        _, ga_handle = self.inventory.add_relic_to_inventory("Deep" if is_deep else "Normal")
+                        self.inventory.modify_relic(ga_handle, relic_id, *effects, *curses)
+            relic_info_to_ga_map[tuple(needed_relic.values())] = ga_handle
+
+        # Import Presets
+        result_msgs = []
+        for preset in import_data["presets"]:
+            try:
+                relic_gas = [relic_info_to_ga_map[tuple(r.values())] for r in preset["relics"]]
+                self.push_preset(hero_type, preset['vessel_id'], relic_gas, preset['name'])
+                result_msgs.append(f"Preset {preset['name']} imported successfully.")
+            except Exception as e:
+                result_msgs.append(f"Preset {preset['name']} import failed: {e}")
+
+        # Import Vessels
+        import_vessels_data = [{
+            "vessel_id": v["vessel_id"],
+            "relics": [relic_info_to_ga_map.get(tuple(r.values()), 0) for r in v["relics"]]
+        } for v in import_data["vessels"]]
+        result_msgs += self.heroes[hero_type].import_vessels(import_vessels_data)
+        result_msgs.append("Followed Relics are unique and cannot be added to the inventory.")
+        result_msgs += miss_unique_names
+
+        self.update_all_loadouts()
+        return result_msgs
