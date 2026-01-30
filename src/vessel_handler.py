@@ -185,10 +185,14 @@ class HeroLoadout:
             relationship between serialized relic data and active 'ga_handle' IDs.
         """
         inventory = InventoryHandler()  # InventoryHandler is a singleton Class
+        game_data = SourceDataHandler()  # SourceDataHandler is a singleton Class
         result_msgs = []
         for im_v in im_vessels:
             for v in self.vessels:
                 if v["vessel_id"] == im_v["vessel_id"]:
+                    if not is_vessel_unlocked(v["vessel_id"]):
+                        result_msgs.append(f"{game_data.vessels[v['vessel_id']].name} import failed. Vessel is not unlocked.")
+                        break
                     for r in v["relics"]:
                         if r != 0:
                             inventory.unequip_relic(r, self.hero_type)
@@ -196,7 +200,7 @@ class HeroLoadout:
                     for r in v["relics"]:
                         if r != 0:
                             inventory.equip_relic(r, self.hero_type)
-                    result_msgs.append(f"Vessel {v['vessel_id']} imported successfully.")
+                    result_msgs.append(f"{game_data.vessels[v['vessel_id']].name} imported successfully.")
                     break
             else:
                 result_msgs.append(f"Vessel {im_v['vessel_id']} not found in hero loadout.")
@@ -802,7 +806,10 @@ class LoadoutHandler:
         # Set current vessel id
         cur_vessel_id = import_data["cur_vessel_id"]
         if self.validator.check_vessel_assignment(self.heroes, hero_type, cur_vessel_id):
-            self.heroes[hero_type].cur_vessel_id = cur_vessel_id
+            if is_vessel_unlocked(cur_vessel_id):
+                self.heroes[hero_type].cur_vessel_id = cur_vessel_id
+            else:
+                logger.warning(f"Vessel {cur_vessel_id} is not unlocked")
         else:
             logger.warning(f"Vessel {cur_vessel_id} is not assigned to hero {hero_type}.")
             logger.warning("This Loadout file may be corrupted and not safe to use.")
@@ -830,7 +837,7 @@ class LoadoutHandler:
                 curses = [needed_relic["curse_1"], needed_relic["curse_2"], needed_relic["curse_3"]]
                 if self.game_data.relics.get(relic_id):
                     if relic_id in UNIQUENESS_IDS:
-                        miss_unique_names.append(self.game_data.relics[relic_id].name)
+                        miss_unique_names.append(self.game_data.relics[relic_id].name + ":" + self.game_data.effects[effects[0]].name + "...")
                         logger.warning(f"{self.game_data.relics[relic_id].name} is an unique relic and not in inventory.")
                     else:
                         logger.info("Found relic not in inventory, try to add it.")
@@ -842,6 +849,9 @@ class LoadoutHandler:
         # Import Presets
         result_msgs = []
         for preset in import_data["presets"]:
+            if not is_vessel_unlocked(preset['vessel_id']):
+                result_msgs.append(f"Preset {preset['name']} import failed: {self.game_data.vessels[preset['vessel_id']].name} is not unlocked.")
+                continue
             try:
                 relic_gas = [relic_info_to_ga_map[tuple(r.values())] for r in preset["relics"]]
                 self.push_preset(hero_type, preset['vessel_id'], relic_gas, preset['name'])
@@ -855,8 +865,10 @@ class LoadoutHandler:
             "relics": [relic_info_to_ga_map.get(tuple(r.values()), 0) for r in v["relics"]]
         } for v in import_data["vessels"]]
         result_msgs += self.heroes[hero_type].import_vessels(import_vessels_data)
-        result_msgs.append("Followed Relics are unique and cannot be added to the inventory.")
-        result_msgs += miss_unique_names
+        if miss_unique_names:
+            result_msgs.append("="*40)
+            result_msgs.append("Followed Relics are unique and cannot be added to the inventory:")
+            result_msgs += miss_unique_names
 
         self.update_all_loadouts()
         return result_msgs
