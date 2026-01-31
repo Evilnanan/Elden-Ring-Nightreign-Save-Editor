@@ -236,11 +236,10 @@ class VesselParser:
             return
 
         cursor = match.start()
-        self.base_offset = cursor
 
         # Record the start of the entire block if needed
-        self.base_offset = cursor
         cursor = match.end()
+        self.base_offset = cursor
 
         # 1. Hero ID Section (Fixed 10 heroes)
         last_hero_type = None
@@ -859,6 +858,10 @@ class LoadoutHandler:
                         self.inventory.modify_relic(ga_handle, relic_id, *effects, *curses)
             relic_info_to_ga_map[tuple(needed_relic.values())] = ga_handle
 
+        # Reparse to correct offsets.
+        self.inventory.parse()
+        self.parse()
+
         # Import Presets
         result_msgs = []
         for preset in import_data["presets"]:
@@ -871,6 +874,9 @@ class LoadoutHandler:
                 result_msgs.append(f"Preset {preset['name']} imported successfully.")
             except Exception as e:
                 result_msgs.append(f"Preset {preset['name']} import failed: {e}")
+
+        # Reparse to correct offsets.
+        self.parse()
 
         # Import Vessels
         import_vessels_data = [{
