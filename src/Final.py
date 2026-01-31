@@ -9,7 +9,6 @@ Refactor Summary:
 4. Localization: Automated language code detection to replace hardcoded defaults.
 
 TODO:
-    'Save File' auto Backup
     Unlock State Parse
     Update Checker
     Selective Loadout Import
@@ -27,6 +26,8 @@ import threading
 import re
 import logging
 import inspect
+import zipfile
+from datetime import datetime
 # project modules
 from log_config import setup_logging
 from basic_class import Item
@@ -60,6 +61,52 @@ userdata_path = None
 
 # Config file path for remembering last opened file
 CONFIG_FILE = os.path.join(get_base_dir(), "editor_config.json")
+# Save Backup DIr Path
+BACKUP_DIR = os.path.join(get_base_dir(), "backup")
+
+
+def backup_save(file_path):
+    global BACKUP_DIR
+
+    def manage_backup_rotation():
+        # Get all zip files except root.zip
+        files = [f for f in os.listdir(BACKUP_DIR) if f.endswith('.zip') and f != "root.zip"]
+        
+        # Sort files by modification time (oldest first)
+        files.sort(key=lambda x: os.path.getmtime(os.path.join(BACKUP_DIR, x)))
+
+        # If more than 5, remove the oldest ones
+        while len(files) > 5:
+            oldest_file = files.pop(0)
+            os.remove(os.path.join(BACKUP_DIR, oldest_file))
+            logger.info(f"Removed old backup: {oldest_file}")
+    
+    # Ensure backup directory exists
+    if not os.path.exists(BACKUP_DIR):
+        os.makedirs(BACKUP_DIR)
+        logger.info(f"Created backup directory: {BACKUP_DIR}")
+
+    root_zip_path = os.path.join(BACKUP_DIR, "root.zip")
+
+    # Check if root.zip exists
+    if not os.path.exists(root_zip_path):
+        # Case: root.zip doesn't exist, create it as the pure backup
+        logger.info("root.zip not found. Creating initial pure backup...")
+        with zipfile.ZipFile(root_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipf.write(file_path, os.path.basename(file_path))
+        logger.info(f"Successfully created: {root_zip_path}")
+    else:
+        # Case: root.zip exists, perform regular time-stamped backup
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_filename = f"backup_{timestamp}.zip"
+        backup_full_path = os.path.join(BACKUP_DIR, backup_filename)
+        
+        with zipfile.ZipFile(backup_full_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipf.write(file_path, os.path.basename(file_path))
+        logger.info(f"Created regular backup: {backup_filename}")
+
+        # Manage backup rotation (keep max 5 regular backups)
+        manage_backup_rotation()
 
 
 def load_config():
@@ -300,6 +347,7 @@ RELIC_COLOR_HEX = {
 
 
 def split_files(file_path, folder_name):
+    backup_save(file_path)
     file_name = os.path.basename(file_path)
     split_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), folder_name)
     #clean current dir
