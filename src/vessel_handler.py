@@ -15,12 +15,12 @@ from globals import ITEM_TYPE_RELIC, COLOR_MAP, get_now_timestamp, UNIQUENESS_ID
 logger = logging.getLogger(__name__)
 
 
-def is_vessel_unlocked(vessel_id: int):
+def is_vessel_available(vessel_id: int):
     try:
         game_data = SourceDataHandler()  # SourceDataHandler is a singleton Class
         inventory = InventoryHandler()  # InventoryHandler is a singleton Class
         _vessel_goods_id = game_data.vessels[vessel_id].goods_id
-        return _vessel_goods_id in inventory.vessels
+        return _vessel_goods_id in inventory.vessels and inventory.unlock_manager.is_vessel_unlocked(vessel_id)
     except KeyError:
         return False
 
@@ -190,7 +190,7 @@ class HeroLoadout:
         for im_v in im_vessels:
             for v in self.vessels:
                 if v["vessel_id"] == im_v["vessel_id"]:
-                    if not is_vessel_unlocked(v["vessel_id"]):
+                    if not is_vessel_available(v["vessel_id"]):
                         result_msgs.append(f"{game_data.vessels[v['vessel_id']].name} import failed. Vessel is not unlocked.")
                         break
                     for r in v["relics"]:
@@ -804,14 +804,14 @@ class LoadoutHandler:
             import_data = orjson.loads(json_bytes)
         hero_type = import_data["hero_type"]
         # Set current vessel id
-        cur_vessel_id = import_data["cur_vessel_id"]
-        if self.validator.check_vessel_assignment(self.heroes, hero_type, cur_vessel_id):
-            if is_vessel_unlocked(cur_vessel_id):
-                self.heroes[hero_type].cur_vessel_id = cur_vessel_id
+        im_cur_vessel_id = import_data["cur_vessel_id"]
+        if self.validator.check_vessel_assignment(self.heroes, hero_type, im_cur_vessel_id):
+            if is_vessel_available(im_cur_vessel_id):
+                self.heroes[hero_type].cur_vessel_id = im_cur_vessel_id
             else:
-                logger.warning(f"Vessel {cur_vessel_id} is not unlocked")
+                logger.warning(f"Vessel {im_cur_vessel_id} is not unlocked")
         else:
-            logger.warning(f"Vessel {cur_vessel_id} is not assigned to hero {hero_type}.")
+            logger.warning(f"Vessel {im_cur_vessel_id} is not assigned to hero {hero_type}.")
             logger.warning("This Loadout file may be corrupted and not safe to use.")
 
         # Check if All Needed Relic in Inventory
@@ -849,7 +849,7 @@ class LoadoutHandler:
         # Import Presets
         result_msgs = []
         for preset in import_data["presets"]:
-            if not is_vessel_unlocked(preset['vessel_id']):
+            if not is_vessel_available(preset['vessel_id']):
                 result_msgs.append(f"Preset {preset['name']} import failed: {self.game_data.vessels[preset['vessel_id']].name} is not unlocked.")
                 continue
             try:

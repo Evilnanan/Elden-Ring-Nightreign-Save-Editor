@@ -30,7 +30,7 @@ from globals import (ITEM_TYPE_RELIC, ITEM_TYPE_GOODS,
 
 from relic_checker import RelicChecker, InvalidReason, is_curse_invalid
 from source_data_handler import SourceDataHandler, get_system_language
-from vessel_handler import LoadoutHandler, is_vessel_unlocked
+from vessel_handler import LoadoutHandler, is_vessel_available
 from inventory_handler import InventoryHandler
 
 
@@ -268,7 +268,7 @@ def get_character_loadout(char_name):
             else:
                 relics.append((0, None))
 
-        is_unlocked = is_vessel_unlocked(vessel['vessel_id'])
+        is_unlocked = is_vessel_available(vessel['vessel_id'])
 
         loadout[idx] = {
             'relics': relics,
@@ -1444,7 +1444,7 @@ class SaveEditorGUI:
                 self.vessel_frames[vessel_slot].config(text=vessel_name)
 
                 vessel_info = loadout.get(vessel_slot, {})
-                is_unlocked = is_vessel_unlocked(vessel_id)
+                is_unlocked = is_vessel_available(vessel_id)
 
                 # Update status label
                 if vessel_slot < len(self.vessel_status_labels):
