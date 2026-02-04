@@ -65,7 +65,6 @@ userdata_path = None
 CONFIG_FILE = os.path.join(get_base_dir(), "editor_config.json")
 # Save Backup DIr Path
 BACKUP_DIR = os.path.join(get_base_dir(), "backup")
-color_mode = None
 
 
 def backup_save(file_path):
@@ -992,7 +991,8 @@ class ColorTheme:
         if self._initialized:
             return
         
-        self._mode = "light"
+        self._mode = "dark"
+        self._style = None
         self._setup_palettes()
         self._initialized = True
 
@@ -1005,10 +1005,18 @@ class ColorTheme:
             "light": {
                 # Base UI Backgrounds
                 "base": {
-                    "main_bg": "#FFFFFF",      # Main window background
+                    "main_bg": "#ECECEC",      # Main window background
                     "card_bg": "#F8F9FA",      # Tab or Frame background
                     "input_bg": "#FFFFFF",     # Entry or Text background
-                    "text_main": "#000000"     # Default text color
+                    "text_main": "#000000",    # Default text color
+                    "text_second": "#888888",  # Secondary text color
+                    "btn_bg": "#DDDDDD",       # Contrast for buttons
+                    "btn_hoverd": "#EBEBEB",   # Slightly lighter for hover
+                    "btn_pressed": "#bcbcbc"   # Slightly darker for press
+                },
+                "label": {
+                    "MurkSig": "blue",
+                    "item_name": "blue"
                 },
                 "action": {
                     "highlight": "#AF4C4C", "add": "green", "danger": "red",
@@ -1017,7 +1025,8 @@ class ColorTheme:
                 "relic": {
                     'Red': '#FF4444', 'Blue': '#4488FF', 'Yellow': '#B8860B',
                     'Green': '#44BB44', 'Purple': '#AA44FF', 'Orange': '#FF8C00',
-                    'White': '#AAAAAA', 'Unknown': '#888888', None: '#888888'
+                    'White': '#AAAAAA', "Deep": "#172752",
+                    'Unknown': '#888888', None: '#888888'
                 },
                 "status": {
                     "valid": "green", "fixable": "#cc6600", "illegal": "red",
@@ -1032,10 +1041,18 @@ class ColorTheme:
             "dark": {
                 # Base UI Backgrounds for Dark Mode
                 "base": {
-                    "main_bg": "#121212",      # Deep dark background
-                    "card_bg": "#1E1E1E",      # Slightly lighter surface
-                    "input_bg": "#2D2D2D",     # Contrast for inputs
-                    "text_main": "#E0E0E0"     # Soft white text
+                    "main_bg": "#00001A",      # Deep dark background
+                    "card_bg": "#151538",      # Slightly lighter surface
+                    "input_bg": "#333058",     # Contrast for inputs
+                    "text_main": "#B2B3DC",    # Soft white text
+                    "text_second": "#88A2B7",  # Secondary text color
+                    "btn_bg": "#202139",       # Contrast for buttons
+                    "btn_hoverd": "#30325B",   # Slightly lighter for hover
+                    "btn_pressed": "#17172B"   # Slightly darker for press
+                },
+                "label": {
+                    "MurkSig": "#45bbff",
+                    "item_name": "#45bbff"
                 },
                 "action": {
                     "highlight": "#FF8A8A", "add": "#00FF00", "danger": "#FF4444",
@@ -1044,7 +1061,8 @@ class ColorTheme:
                 "relic": {
                     'Red': '#FF6666', 'Blue': '#66AAFF', 'Yellow': '#F1C40F',
                     'Green': '#66FF66', 'Purple': '#CC88FF', 'Orange': '#FFAA44',
-                    'White': '#DDDDDD', 'Unknown': '#AAAAAA', None: '#AAAAAA'
+                    'White': '#DDDDDD', "Deep": "#B6B0FF",
+                    'Unknown': '#AAAAAA', None: '#AAAAAA'
                 },
                 "status": {
                     "valid": "#00FF00", "fixable": "#FFB366", "illegal": "#FF5555",
@@ -1052,7 +1070,7 @@ class ColorTheme:
                     "mismatch": {"fg": "#FF8888", "bg": "#441111"}
                 },
                 "special": {
-                    "unique": "#FFB84D", "illegal_unique": "#8888FF",
+                    "unique": "#FFB84D", "illegal_unique": "#5079FF",
                     "empty": "#AAAAAA", "deep_slot": "#CCCCFF"
                 }
             }
@@ -1072,22 +1090,64 @@ class ColorTheme:
         """
         if not self._style:
             self._style = ttk.Style()
+            self._style.theme_use("default")
         
         base = self._themes[self._mode]["base"]
+        action = self._themes[self._mode]["action"]
+        label = self._themes[self._mode]["label"]
         
-        # Configure the 'T' prefixed default styles
-        # TFrame, TLabel, TButton are the standard ttk style names
-        self._style.configure("TFrame", background=base["bg"])
-        self._style.configure("TLabel", background=base["bg"], foreground=base["fg"])
-        self._style.configure("TButton", background=base["btn_bg"], foreground=base["fg"])
-        self._style.configure("TNotebook", background=base["bg"], tabmargins=[2, 5, 2, 0])
-        self._style.configure("TNotebook.Tab", background=base["btn_bg"], foreground=base["fg"])
+        self._style.configure("TFrame", background=base["card_bg"])
+        self._style.configure("TLabel", background=base["card_bg"], foreground=base["text_main"])
+        self._style.configure("TButton", background=base["btn_bg"], foreground=base["text_main"])
+        self._style.configure("TNotebook", background=base["main_bg"], tabmargins=[2, 5, 2, 0])
+        self._style.configure("TNotebook.Tab", background=base["btn_bg"], foreground=base["text_main"])
+        self._style.configure("TLabelframe", background=base["card_bg"])
+        self._style.configure("TLabelframe.Label", background=base["card_bg"], foreground=base["text_main"])
+        self._style.configure("Treeview", fieldbackground=base['card_bg'],
+                              background=base["card_bg"], foreground=base["text_main"])
+        self._style.configure("Treeview.Heading", background=base['btn_bg'], foreground=base['text_main'])
+        self._style.configure("TCheckbutton", background=base["card_bg"], foreground=base["text_main"])
+        self._style.configure("TCombobox",
+                              fieldbackground=base["input_bg"],
+                              background=base["btn_bg"],
+                              foreground=base["text_main"], 
+                              darkcolor="gray",
+                              lightcolor="white")
+        self._style.configure("TEntry", fieldbackground=base["input_bg"], foreground=base["text_main"])
+        
+        self._style.configure("Char.TButton", font=('Arial', 10), padding=5)
+        self._style.configure("Highlighted.TButton", font=('Arial', 10), padding=5, foreground=action["highlight"])
+        self._style.configure('Add.TButton', foreground=action["add"], font=('Arial', 10, 'bold'))
+        self._style.configure('Danger.TButton', foreground=action["danger"], font=('Arial', 10))
+        self._style.configure('NormalRelic.TButton', foreground=action["normal"],
+                              font=('Arial', 10, 'bold'))
+        self._style.configure('DeepRelic.TButton', foreground=action["deep"],
+                              font=('Arial', 10, 'bold'))
+        self._style.configure("MurkSig.TLabel", foreground=label["MurkSig"])
+        self._style.configure("Main.TFrame", background=base["main_bg"])
+        # Make TreeView Heading Image centered
+        new_style_TH = [('Treeheading.cell', {'sticky': 'nswe'}), ('Treeheading.border', {'sticky': 'nswe', 'children': [('Treeheading.padding', {'sticky': 'nswe', 'children': [('Treeheading.image', {'sticky': ''}), ('Treeheading.text', {'sticky': 'we'})]})]})]
+        self._style.layout('Treeview.Heading', new_style_TH)
         
         # Mapping specific states (e.g., when a tab is selected)
         self._style.map("TNotebook.Tab", 
-                        background=[("selected", base["bg"])],
-                        foreground=[("selected", base["fg"])]
+                        background=[("selected", base["btn_pressed"])],
+                        foreground=[("selected", base["text_main"])]
                         )
+        self._style.map("TButton",
+                        background=[("active", base["btn_hoverd"]), ("pressed", base["btn_pressed"])]
+                        )
+        self._style.map("TCheckbutton",
+                        background=[("active", base["btn_hoverd"]), ("pressed", base["btn_pressed"])]
+                        )
+        self._style.map("Treeview.Heading",
+                        background=[("active", base["btn_hoverd"]), ("pressed", base["btn_pressed"])]
+                        )
+        self._style.map("TCombobox",
+                        fieldbackground=[("readonly", base["input_bg"])],
+                        foreground=[("readonly", base["text_main"])],
+                        background=[("readonly", base["btn_bg"])]
+)
 
     def apply(self, root: tk.Tk):
         """
@@ -1106,10 +1166,12 @@ class ColorTheme:
         # Only apply manual config to non-ttk widgets 
         # (ttk widgets usually start with 'ttk::' in their internal name)
         if not str(widget).startswith(".!ttk"):
-            if isinstance(widget, (tk.Tk, tk.Toplevel, tk.Frame, tk.LabelFrame)):
-                widget.config(bg=base["bg"])
+            if isinstance(widget, (tk.Tk, tk.Toplevel)):
+                widget.config(bg=base["main_bg"])
+            elif isinstance(widget, (tk.Frame, tk.LabelFrame, tk.Canvas)):
+                widget.config(bg=base["card_bg"])
             elif isinstance(widget, (tk.Label, tk.Button, tk.Checkbutton)):
-                widget.config(bg=base["bg"], fg=base["fg"])
+                widget.config(bg=base["card_bg"], fg=base["text_main"])
         
         for child in widget.winfo_children():
             self._recursive_update(child)
@@ -1123,6 +1185,36 @@ class ColorTheme:
     def fg(self) -> str:
         """Shortcut to get main text color."""
         return self.get("base", "text_main")
+    
+    @property
+    def label(self) -> dict:
+        """Shortcut to get label colors."""
+        return self._themes[self._mode]["label"]
+    
+    @property
+    def action(self) -> dict:
+        """Shortcut to get action colors."""
+        return self._themes[self._mode]["action"]
+
+    @property
+    def relic(self) -> dict:
+        """Shortcut to get relic colors."""
+        return self._themes[self._mode]["relic"]
+    
+    @property
+    def status(self) -> dict:
+        """Shortcut to get status colors."""
+        return self._themes[self._mode]["status"]
+    
+    @property
+    def special(self) -> dict:
+        """Shortcut to get special colors."""
+        return self._themes[self._mode]["special"]
+
+    @property
+    def base(self) -> dict:
+        """Shortcut to get base colors."""
+        return self._themes[self._mode]["base"]
 
 
 class SearchableCombobox(ttk.Frame):
@@ -1194,22 +1286,7 @@ class SaveEditorGUI:
     relic_checker: Optional[RelicChecker] = None
 
     def __init__(self, root):
-        global color_mode
-        color_mode = tk.StringVar(value="light")
-        
-        # ttk Style setting
-        style = ttk.Style()
-        style.configure("Char.TButton", font=('Arial', 10), padding=5)
-        style.configure("Highlighted.TButton", font=('Arial', 10), padding=5, background="#AF4C4C", foreground="red")
-        style.configure('Add.TButton', foreground='green', font=('Arial', 10, 'bold'))
-        style.configure('Danger.TButton', foreground='red', font=('Arial', 10))
-        style.configure('NormalRelic.TButton', foreground='#016151',
-                        font=('Arial', 10, 'bold'))
-        style.configure('DeepRelic.TButton', foreground='#694fff',
-                        font=('Arial', 10, 'bold'))
-        # Make TreeView Heading Image centered
-        new_style_TH = [('Treeheading.cell', {'sticky': 'nswe'}), ('Treeheading.border', {'sticky': 'nswe', 'children': [('Treeheading.padding', {'sticky': 'nswe', 'children': [('Treeheading.image', {'sticky': ''}), ('Treeheading.text', {'sticky': 'we'})]})]})]
-        style.layout('Treeview.Heading', new_style_TH)
+        self.color_theme = ColorTheme()
 
         self.game_data = SourceDataHandler()
         self.relic_checker = RelicChecker()
@@ -1249,6 +1326,8 @@ class SaveEditorGUI:
         self.setup_file_tab()
         self.setup_inventory_tab()
         self.setup_vessels_tab()
+        
+        self.color_theme.apply(self.root)
 
         # Try to load last opened file after UI is set up
         self.root.after(100, self.try_load_last_file)
@@ -1269,6 +1348,7 @@ class SaveEditorGUI:
         """
         # 1. Create a top-level loading window
         loading_win = tk.Toplevel(self.root)
+        loading_win.config(bg=self.color_theme.base["card_bg"])
         loading_win.title(title)
         loading_win.geometry("350x150")
         loading_win.resizable(False, False)
@@ -1396,8 +1476,8 @@ class SaveEditorGUI:
         info_label.pack(pady=(0, 10))
         
         ttk.Button(file_frame, text="📁 Open Save File", command=self.open_file, width=20).pack(pady=5)
-        ttk.Button(file_frame, text="💾 Save Modified File", command=self.save_changes).pack(padx=5)
-        ttk.Button(file_frame, text="💾 Import save (PC/PS4)", command=self.import_save_tk).pack(padx=5)
+        ttk.Button(file_frame, text="💾 Save Modified File", command=self.save_changes, width=20).pack(pady=5)
+        ttk.Button(file_frame, text="💾 Import save (PC/PS4)", command=self.import_save_tk, width=20).pack(pady=5)
         
         # Stats section
         stats_frame = ttk.LabelFrame(container, text="Character Statistics", padding=15)
@@ -1408,7 +1488,7 @@ class SaveEditorGUI:
         murks_row.pack(fill='x', pady=5)
         
         ttk.Label(murks_row, text="Murks:", font=('Arial', 11, 'bold'), width=15).pack(side='left')
-        self.murks_display = ttk.Label(murks_row, text="N/A", font=('Arial', 11), foreground='blue')
+        self.murks_display = ttk.Label(murks_row, text="N/A", font=('Arial', 11), style="MurkSig.TLabel")
         self.murks_display.pack(side='left', padx=10)
         ttk.Button(murks_row, text="Edit", command=self.modify_murks, width=10).pack(side='right', padx=5)
         
@@ -1417,7 +1497,7 @@ class SaveEditorGUI:
         sigs_row.pack(fill='x', pady=5)
         
         ttk.Label(sigs_row, text="Sigs:", font=('Arial', 11, 'bold'), width=15).pack(side='left')
-        self.sigs_display = ttk.Label(sigs_row, text="N/A", font=('Arial', 11), foreground='blue')
+        self.sigs_display = ttk.Label(sigs_row, text="N/A", font=('Arial', 11), style="MurkSig.TLabel")
         self.sigs_display.pack(side='left', padx=10)
         ttk.Button(sigs_row, text="Edit", command=self.modify_sigs, width=10).pack(side='right', padx=5)
         
@@ -3416,6 +3496,11 @@ class SaveEditorGUI:
             messagebox.showerror("Error", f"Failed to load loadout: {e}")
 
     def setup_inventory_tab(self):
+        # Colors short cut
+        special_clr = self.color_theme.special
+        relic_clr = self.color_theme.relic
+        status_clr = self.color_theme.status
+
         # Controls frame
         controls_frame = ttk.Frame(self.inventory_tab)
         controls_frame.pack(fill='x', padx=10, pady=5)
@@ -3461,11 +3546,11 @@ class SaveEditorGUI:
         )
         self.illegal_count_label.pack(side='left', padx=(0, 15))
 
-        ttk.Label(legend_frame, text="Blue = Red + Orange", foreground="blue").pack(side='left', padx=5)
-        ttk.Label(legend_frame, text="Red = Illegal", foreground="red").pack(side='left', padx=5)
-        ttk.Label(legend_frame, text="Purple = Missing Curse", foreground="#800080").pack(side='left', padx=5)
-        ttk.Label(legend_frame, text="Orange = Unique Relic (don't edit)", foreground="#FF8C00").pack(side='left', padx=5)
-        ttk.Label(legend_frame, text="Teal = Strict Invalid", foreground="#008080").pack(side='left', padx=5)
+        ttk.Label(legend_frame, text="Blue = Red + Orange", foreground=special_clr['illegal_unique']).pack(side='left', padx=5)
+        ttk.Label(legend_frame, text="Red = Illegal", foreground=status_clr['illegal']).pack(side='left', padx=5)
+        ttk.Label(legend_frame, text="Purple = Missing Curse", foreground=relic_clr["Purple"]).pack(side='left', padx=5)
+        ttk.Label(legend_frame, text="Orange = Unique Relic (don't edit)", foreground=special_clr['unique']).pack(side='left', padx=5)
+        ttk.Label(legend_frame, text="Teal = Strict Invalid", foreground=status_clr['strict_invalid']).pack(side='left', padx=5)
 
         # Search frame - Row 1: Basic search and filters
         search_frame = ttk.Frame(self.inventory_tab)
@@ -3532,7 +3617,8 @@ class SaveEditorGUI:
         self.tree = ttk.Treeview(inv_frame, columns=columns, show='tree headings', height=20)
 
         # Configure columns - # column shows acquisition order
-        self.tree.heading('#0', image=self.fav_icon_img, anchor='center')
+        head_img = self.fav_icon_img if self.color_theme._mode == 'light' else self.fav_icon_img_dark
+        self.tree.heading('#0', image=head_img, anchor='center')
         self.tree.column('#0', width=60, minwidth=60)
 
         # Set column widths - more space for effect names
@@ -4068,12 +4154,15 @@ class SaveEditorGUI:
                 filtered_relics.append(relic)
 
         # Configure tags once before populating
-        self.tree.tag_configure('both', foreground='blue', font=('Arial', 9, 'bold'))
-        self.tree.tag_configure('forbidden', foreground='#FF8C00', font=('Arial', 9, 'bold'))
-        self.tree.tag_configure('curse_illegal', foreground='#9932CC', font=('Arial', 9, 'bold'))
-        self.tree.tag_configure('illegal', foreground='red', font=('Arial', 9, 'bold'))
-        self.tree.tag_configure('strict_invalid', foreground='#008080', font=('Arial', 9))  # Teal for strict invalid
-        self.tree.tag_configure('deep', foreground="#172752")  # Subtle color for deep relics, no background
+        special = self.color_theme.special
+        relics_clr = self.color_theme.relic
+        status_clr = self.color_theme.status
+        self.tree.tag_configure('both', foreground=special['illegal_unique'], font=('Arial', 9, 'bold'))
+        self.tree.tag_configure('forbidden', foreground=special['unique'], font=('Arial', 9, 'bold'))
+        self.tree.tag_configure('curse_illegal', foreground=relics_clr['Purple'], font=('Arial', 9, 'bold'))
+        self.tree.tag_configure('illegal', foreground=status_clr['illegal'], font=('Arial', 9, 'bold'))
+        self.tree.tag_configure('strict_invalid', foreground=status_clr['strict_invalid'], font=('Arial', 9))  # Teal for strict invalid
+        self.tree.tag_configure('deep', foreground=relics_clr["Deep"])  # Subtle color for deep relics, no background
 
         # sort filtered relics by acquisition rank
         # filtered_relics.sort(key=lambda r: r.get('acquisition_rank', 0), reverse=True)
@@ -4090,8 +4179,9 @@ class SaveEditorGUI:
                 tags.append('deep')
 
             # Use acquisition_rank for the # column (1 = oldest, 2 = second oldest, etc.)
+            head_img = self.fav_icon_img if self.color_theme._mode == 'light' else self.fav_icon_img_dark
             self.tree.insert('', 'end',
-                             image=self.fav_icon_img if is_favorite else self.empty_img,
+                             image=head_img if is_favorite else self.empty_img,
                              values=(str(relic.get('acquisition_rank', 0)), relic['item_name'], deep_indicator, relic['real_id'], relic['item_color'],
                                      relic.get('equipped_by_str', '-'),
                                      relic['effect_names'][0], relic['effect_names'][1], relic['effect_names'][2],
@@ -4183,7 +4273,7 @@ class SaveEditorGUI:
         if col == 'FAV':
             self.tree.heading('#0', text=(' ▼' if self.sort_reverse else ' ▲'))
         else:
-            self.tree.heading('#0')
+            self.tree.heading('#0', text="")
 
     def show_context_menu(self, event):
         # Select item under cursor
@@ -4834,9 +4924,11 @@ class ModifyRelicDialog:
     relic_checker: Optional[RelicChecker] = None
     inventory: Optional[InventoryHandler] = None
     def __init__(self, parent, ga_handle, item_id, callback):
+        self.color_theme = ColorTheme()
         self.callback = callback
         
         self.dialog = tk.Toplevel(parent)
+        
         self.dialog.title("Modify Relic")
         self.dialog.geometry("700x600")
         self.dialog.transient(parent)
@@ -4848,6 +4940,7 @@ class ModifyRelicDialog:
         self.inventory = InventoryHandler()
         
         self.setup_ui()
+        self.color_theme.apply(self.dialog)
         self.load_relic(ga_handle, item_id)
         
     def _set_position(self, parent):
@@ -5258,6 +5351,11 @@ class ModifyRelicDialog:
         self.debug_text.config(state='disabled')
 
     def setup_ui(self):
+        # Color shortcut
+        base_clr = self.color_theme.base
+        status_clr = self.color_theme.status
+        label_clr = self.color_theme.label
+        
         # Title showing current relic
         self.title_label = ttk.Label(self.dialog, text="", font=('Arial', 14, 'bold'))
         self.title_label.pack(pady=10)
@@ -5266,17 +5364,32 @@ class ModifyRelicDialog:
         main_frame = ttk.Frame(self.dialog)
         main_frame.pack(fill='both', expand=True, padx=10, pady=6)
 
-        canvas = tk.Canvas(main_frame)
+        canvas = tk.Canvas(main_frame, highlightthickness=0)
         scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
+        
+        y_offset = 10
+
+        canvas_window = canvas.create_window(
+            (canvas.winfo_width() / 2, y_offset), 
+            window=scrollable_frame, 
+            anchor="n"
+        )
 
         scrollable_frame.bind(
             "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            lambda e: canvas.configure(
+                scrollregion=(0, 0, canvas.bbox("all")[2], canvas.bbox("all")[3] + y_offset)
+            )
         )
 
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
+        
+        def on_canvas_configure(e):
+            mid_x = e.width / 2
+            canvas.coords(canvas_window, mid_x, y_offset)
+
+        canvas.bind("<Configure>", on_canvas_configure)
 
         # Enable mouse wheel scrolling only when mouse is over this dialog
         def _on_mousewheel(event):
@@ -5303,7 +5416,7 @@ class ModifyRelicDialog:
         self.status_label.pack(anchor='w')
 
         self.illegal_reason_label = ttk.Label(self.status_frame, text="", font=('Arial', 10),
-                                               wraplength=650, foreground='#333333')
+                                               wraplength=650, foreground=status_clr["hint"])
         self.illegal_reason_label.pack(anchor='w', pady=(5, 0))
 
         # Modifier Config Section
@@ -5323,10 +5436,10 @@ class ModifyRelicDialog:
         item_info_frame.pack(fill='x', anchor='w')
 
         ttk.Label(item_info_frame, text="Current Item ID:").pack(side='left')
-        self.current_item_label = ttk.Label(item_info_frame, text="", font=('Arial', 10, 'bold'), foreground='blue')
+        self.current_item_label = ttk.Label(item_info_frame, text="", font=('Arial', 10, 'bold'), foreground=label_clr["item_name"])
         self.current_item_label.pack(side='left', padx=(5, 15))
 
-        self.relic_structure_label = ttk.Label(item_info_frame, text="", font=('Arial', 9), foreground='#666666')
+        self.relic_structure_label = ttk.Label(item_info_frame, text="", font=('Arial', 9), foreground=status_clr["hint"])
         self.relic_structure_label.pack(side='left')
 
         # Relic type indicator (Original vs Scene/1.02)
@@ -5336,7 +5449,7 @@ class ModifyRelicDialog:
         self.relic_type_label = ttk.Label(relic_type_frame, text="", font=('Arial', 9, 'bold'))
         self.relic_type_label.pack(side='left')
 
-        self.relic_type_info_label = ttk.Label(relic_type_frame, text="", font=('Arial', 8), foreground='#888888')
+        self.relic_type_info_label = ttk.Label(relic_type_frame, text="", font=('Arial', 8), foreground=status_clr["hint"])
         self.relic_type_info_label.pack(side='left', padx=(10, 0))
 
         ttk.Label(item_frame, text="Enter new Item ID (decimal) or search:").pack(anchor='w', pady=(10, 0))
@@ -5417,7 +5530,7 @@ class ModifyRelicDialog:
                       command=lambda idx=i: self.search_effects(idx)).pack(side='left', padx=5)
 
             # Effect name display
-            name_label = ttk.Label(entry_frame, text="", foreground='blue')
+            name_label = ttk.Label(entry_frame, text="", foreground=label_clr["item_name"])
             name_label.pack(side='left', padx=5)
             self.effect_name_labels.append(name_label)
         
@@ -5438,11 +5551,11 @@ class ModifyRelicDialog:
         scrollbar.pack(side="right", fill="y")
         
         # Buttons at bottom
-        button_frame = ttk.Frame(self.dialog)
+        button_frame = ttk.Frame(self.dialog, style="Main.TFrame")
         button_frame.pack(fill='x', padx=10, pady=10)
 
         ttk.Label(button_frame, text="Click different relics in inventory to switch",
-                 foreground='gray').pack(side='left', padx=5)
+                 foreground=base_clr["text_second"], background=base_clr["main_bg"]).pack(side='left', padx=5)
         ttk.Button(button_frame, text="Apply Changes", command=self.apply_changes).pack(side='right', padx=5)
         ttk.Button(button_frame, text="Close", command=self.dialog.destroy).pack(side='right', padx=5)
         ttk.Button(button_frame, text="🔄 Auto Sort", command=self.auto_sort_effects).pack(side='right', padx=5)
@@ -6165,7 +6278,9 @@ class SearchDialog:
         self.game_data = SourceDataHandler()
         self.relic_checker = RelicChecker()
         
+        self.color_theme = ColorTheme()
         self.dialog = tk.Toplevel(parent)
+        self.dialog.config(bg=self.color_theme.bg)
         self.dialog.title(title)
         self.dialog.geometry("600x500")
         self.dialog.transient(parent)
