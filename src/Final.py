@@ -991,7 +991,7 @@ class ColorTheme:
         if self._initialized:
             return
         
-        self._mode = "dark"
+        self._mode = "light"
         self._style = None
         self._setup_palettes()
         self._initialized = True
@@ -1014,13 +1014,20 @@ class ColorTheme:
                     "btn_hoverd": "#EBEBEB",   # Slightly lighter for hover
                     "btn_pressed": "#bcbcbc"   # Slightly darker for press
                 },
+                "border": {
+                    "card": "#F8F9FA"
+                },
                 "label": {
                     "MurkSig": "blue",
                     "item_name": "blue"
                 },
                 "action": {
-                    "highlight": "#AF4C4C", "add": "green", "danger": "red",
-                    "normal": "#016151", "deep": "#694fff"
+                    "highlight": "#D41515", "add": "green", "danger": "red",
+                    "normal": "#016151", "deep": "#694fff",
+                    "red_bg": "#FF9999", "red_bg_a": "#FFCCCC", "red_fg": "#320000",
+                    "green_bg": "#99FF99", "green_bg_a": "#CCFFCC", "green_fg": "#003200",
+                    "yellow_bg": "#FFFF99", "yellow_bg_a": "#FFFFCC", "yellow_fg": "#323200",
+                    "blue_bg": "#9999FF", "blue_bg_a": "#CCCCFF", "blue_fg": "#000032"
                 },
                 "relic": {
                     'Red': '#FF4444', 'Blue': '#4488FF', 'Yellow': '#B8860B',
@@ -1031,7 +1038,8 @@ class ColorTheme:
                 "status": {
                     "valid": "green", "fixable": "#cc6600", "illegal": "red",
                     "strict_invalid": "#008080", "hint": "#333333",
-                    "mismatch": {"fg": "#ff6b6b", "bg": "#331111"}
+                    "mismatch": {"fg": "#ff6b6b", "bg": "#331111"},
+                    "Locked": "red", "Unlocked": "green"
                 },
                 "special": {
                     "unique": "#ff8c00", "illegal_unique": "blue",
@@ -1041,12 +1049,12 @@ class ColorTheme:
             "dark": {
                 # Base UI Backgrounds for Dark Mode
                 "base": {
-                    "main_bg": "#00001A",      # Deep dark background
-                    "card_bg": "#151538",      # Slightly lighter surface
-                    "input_bg": "#333058",     # Contrast for inputs
-                    "text_main": "#B2B3DC",    # Soft white text
-                    "text_second": "#88A2B7",  # Secondary text color
-                    "btn_bg": "#202139",       # Contrast for buttons
+                    "main_bg": "#0a0a20",      # Deep dark background
+                    "card_bg": "#161b3d",      # Slightly lighter surface
+                    "input_bg": "#1c224d",     # Contrast for inputs
+                    "text_main": "#e0e0ff",    # Soft white text
+                    "text_second": "#8b9bbd",  # Secondary text color
+                    "btn_bg": "#373862",       # Contrast for buttons
                     "btn_hoverd": "#30325B",   # Slightly lighter for hover
                     "btn_pressed": "#17172B"   # Slightly darker for press
                 },
@@ -1055,22 +1063,27 @@ class ColorTheme:
                     "item_name": "#45bbff"
                 },
                 "action": {
-                    "highlight": "#FF8A8A", "add": "#00FF00", "danger": "#FF4444",
-                    "normal": "#48C9B0", "deep": "#BBADFF"
+                    "highlight": "#FF8A8A", "add": "#00C400", "danger": "#D73838",
+                    "normal": "#48C9B0", "deep": "#BBADFF",
+                    "red_bg": "#FF9999", "red_bg_a": "#FFCCCC", "red_fg": "#320000",
+                    "green_bg": "#99FF99", "green_bg_a": "#CCFFCC", "green_fg": "#003200",
+                    "yellow_bg": "#FFFF99", "yellow_bg_a": "#FFFFCC", "yellow_fg": "#323200",
+                    "blue_bg": "#9999FF", "blue_bg_a": "#CCCCFF", "blue_fg": "#000032"
                 },
                 "relic": {
                     'Red': '#FF6666', 'Blue': '#66AAFF', 'Yellow': '#F1C40F',
                     'Green': '#66FF66', 'Purple': '#CC88FF', 'Orange': '#FFAA44',
-                    'White': '#DDDDDD', "Deep": "#B6B0FF",
+                    'White': '#DDDDDD', "Deep": "#bed3ff",
                     'Unknown': '#AAAAAA', None: '#AAAAAA'
                 },
                 "status": {
                     "valid": "#00FF00", "fixable": "#FFB366", "illegal": "#FF5555",
                     "strict_invalid": "#40E0D0", "hint": "#BBBBBB",
-                    "mismatch": {"fg": "#FF8888", "bg": "#441111"}
+                    "mismatch": {"fg": "#FF8888", "bg": "#441111"},
+                    "Locked": "#FF5555", "Unlocked": "#55FF55"
                 },
                 "special": {
-                    "unique": "#FFB84D", "illegal_unique": "#5079FF",
+                    "unique": "#BE7303", "illegal_unique": "#449BFF",
                     "empty": "#AAAAAA", "deep_slot": "#CCCCFF"
                 }
             }
@@ -1090,22 +1103,36 @@ class ColorTheme:
         """
         if not self._style:
             self._style = ttk.Style()
-            self._style.theme_use("default")
+        self._style.theme_use("clam")
         
         base = self._themes[self._mode]["base"]
         action = self._themes[self._mode]["action"]
         label = self._themes[self._mode]["label"]
         
+        # Root Widget
         self._style.configure("TFrame", background=base["card_bg"])
         self._style.configure("TLabel", background=base["card_bg"], foreground=base["text_main"])
-        self._style.configure("TButton", background=base["btn_bg"], foreground=base["text_main"])
+        self._style.configure("TButton", background=base["btn_bg"], foreground=base["text_main"],
+                              relief="flat",
+                              focusthickness=0,
+                              focuscolor=base["btn_pressed"],
+                              dashpattern=[1, 4])
         self._style.configure("TNotebook", background=base["main_bg"], tabmargins=[2, 5, 2, 0])
-        self._style.configure("TNotebook.Tab", background=base["btn_bg"], foreground=base["text_main"])
+        self._style.configure("TNotebook.Tab", background=base["btn_bg"], foreground=base["text_main"],
+                              relief="flat",
+                              focusthickness=0,
+                              focuscolor=base["btn_pressed"],
+                              dashpattern=[1, 4])
         self._style.configure("TLabelframe", background=base["card_bg"])
         self._style.configure("TLabelframe.Label", background=base["card_bg"], foreground=base["text_main"])
-        self._style.configure("Treeview", fieldbackground=base['card_bg'],
-                              background=base["card_bg"], foreground=base["text_main"])
-        self._style.configure("Treeview.Heading", background=base['btn_bg'], foreground=base['text_main'])
+        self._style.configure("Treeview", fieldbackground=base['main_bg'], relief="flat", borderwidth=0,
+                              background=base["main_bg"], foreground=base["text_main"],
+                              lightcolor=self.base["main_bg"], 
+                              darkcolor=self.base["main_bg"],  
+                              bordercolor=self.base["main_bg"])
+        self._style.configure("Treeview.Heading", background=base['btn_bg'], foreground=base['text_main'],
+                              relief="flat", 
+                              font=('Microsoft JhengHei', 10, 'bold'))
         self._style.configure("TCheckbutton", background=base["card_bg"], foreground=base["text_main"])
         self._style.configure("TCombobox",
                               fieldbackground=base["input_bg"],
@@ -1114,7 +1141,31 @@ class ColorTheme:
                               darkcolor="gray",
                               lightcolor="white")
         self._style.configure("TEntry", fieldbackground=base["input_bg"], foreground=base["text_main"])
-        
+        self._style.configure("TRadiobutton", background=base["card_bg"], foreground=base["text_main"])
+
+        # Scrollbar
+        self._style.configure("TScrollbar", 
+                              gripcount=0,
+                              troughcolor=self.base["main_bg"],
+                              background=self.base["btn_bg"],
+                              darkcolor=self.base["card_bg"],
+                              lightcolor=self.base["input_bg"],
+                              bordercolor=self.base["main_bg"],
+                              arrowcolor=self.base["text_second"],
+                              arrowsize=14
+                              )
+
+        self._style.map("TScrollbar",
+                        background=[
+                            ('pressed', self.base["btn_pressed"]),
+                            ('active', self.base["text_second"])
+                        ],
+                        arrowcolor=[
+                            ('pressed', self.base["text_main"]),
+                            ('active', self.base["text_main"])
+                        ])
+
+        # Custom Widget
         self._style.configure("Char.TButton", font=('Arial', 10), padding=5)
         self._style.configure("Highlighted.TButton", font=('Arial', 10), padding=5, foreground=action["highlight"])
         self._style.configure('Add.TButton', foreground=action["add"], font=('Arial', 10, 'bold'))
@@ -1125,19 +1176,29 @@ class ColorTheme:
                               font=('Arial', 10, 'bold'))
         self._style.configure("MurkSig.TLabel", foreground=label["MurkSig"])
         self._style.configure("Main.TFrame", background=base["main_bg"])
+        self._style.configure("Main.TLabelframe", background=base["main_bg"])
+        self._style.configure("Main.TLabelframe.Label", background=base["main_bg"], foreground=base["text_main"])
+        self._style.configure("Red.TButton", background=action["red_bg"], foreground=action["red_fg"])
+        self._style.configure("Green.TButton", background=action["green_bg"], foreground=action["green_fg"])
+        self._style.configure("Yellow.TButton", background=action["yellow_bg"], foreground=action["yellow_fg"])
+        self._style.configure("Blue.TButton", background=action["blue_bg"], foreground=action["blue_fg"])
+
         # Make TreeView Heading Image centered
         new_style_TH = [('Treeheading.cell', {'sticky': 'nswe'}), ('Treeheading.border', {'sticky': 'nswe', 'children': [('Treeheading.padding', {'sticky': 'nswe', 'children': [('Treeheading.image', {'sticky': ''}), ('Treeheading.text', {'sticky': 'we'})]})]})]
         self._style.layout('Treeview.Heading', new_style_TH)
         
         # Mapping specific states (e.g., when a tab is selected)
         self._style.map("TNotebook.Tab", 
-                        background=[("selected", base["btn_pressed"])],
+                        background=[("selected", base["btn_pressed"]), ("active", base["btn_hoverd"])],
                         foreground=[("selected", base["text_main"])]
                         )
         self._style.map("TButton",
                         background=[("active", base["btn_hoverd"]), ("pressed", base["btn_pressed"])]
                         )
         self._style.map("TCheckbutton",
+                        background=[("active", base["btn_hoverd"]), ("pressed", base["btn_pressed"])]
+                        )
+        self._style.map("TRadiobutton",
                         background=[("active", base["btn_hoverd"]), ("pressed", base["btn_pressed"])]
                         )
         self._style.map("Treeview.Heading",
@@ -1147,7 +1208,15 @@ class ColorTheme:
                         fieldbackground=[("readonly", base["input_bg"])],
                         foreground=[("readonly", base["text_main"])],
                         background=[("readonly", base["btn_bg"])]
-)
+                        )
+        self._style.map("Red.TButton",
+                        background=[("active", action["red_bg_a"]), ("pressed", action["red_bg"])])
+        self._style.map("Green.TButton",
+                        background=[("active", action["green_bg_a"]), ("pressed", action["green_bg"])])
+        self._style.map("Yellow.TButton",
+                        background=[("active", action["yellow_bg_a"]), ("pressed", action["yellow_bg"])])
+        self._style.map("Blue.TButton",
+                        background=[("active", action["blue_bg_a"]), ("pressed", action["blue_bg"])])
 
     def apply(self, root: tk.Tk):
         """
@@ -1175,6 +1244,12 @@ class ColorTheme:
         
         for child in widget.winfo_children():
             self._recursive_update(child)
+
+    def set_theme(self, mode: str, widget: tk.Widget):
+        _default = 'dark'
+        mode = mode.lower()
+        self._mode = mode if mode in ('light', 'dark') else _default
+        self.apply(widget)
 
     @property
     def bg(self) -> str:
@@ -1316,7 +1391,7 @@ class SaveEditorGUI:
 
         # Create tabs
         self.file_tab = ttk.Frame(self.notebook)
-        self.inventory_tab = ttk.Frame(self.notebook)
+        self.inventory_tab = ttk.Frame(self.notebook, padding=10)
         self.vessels_tab = ttk.Frame(self.notebook)
 
         self.notebook.add(self.file_tab, text="File Management")
@@ -1463,22 +1538,64 @@ class SaveEditorGUI:
             print(f"Could not auto-load last file: {e}")
 
     def setup_file_tab(self):
+        sec_text_clr = self.color_theme.base["text_second"]
+
         # Main container
         container = ttk.Frame(self.file_tab)
         container.pack(fill='both', expand=True, padx=15, pady=15)
+
+        # Top Warp Frame
+        top_warp_frame = ttk.Frame(container)
+        top_warp_frame.columnconfigure(0, weight=3)
+        top_warp_frame.columnconfigure(1, weight=1)
+        top_warp_frame.rowconfigure(0, weight=1)
+        top_warp_frame.pack(fill='x', pady=(0, 15))
         
         # File loading section
-        file_frame = ttk.LabelFrame(container, text="Save File Management", padding=15)
-        file_frame.pack(fill='x', pady=(0, 15))
+        file_frame = ttk.LabelFrame(top_warp_frame, text="Save File Management", padding=15)
+        file_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         
         info_label = ttk.Label(file_frame, text="Load your Elden Ring NightReign save file to begin editing", 
-                              foreground='gray')
+                              foreground=sec_text_clr)
         info_label.pack(pady=(0, 10))
         
         ttk.Button(file_frame, text="📁 Open Save File", command=self.open_file, width=20).pack(pady=5)
         ttk.Button(file_frame, text="💾 Save Modified File", command=self.save_changes, width=20).pack(pady=5)
         ttk.Button(file_frame, text="💾 Import save (PC/PS4)", command=self.import_save_tk, width=20).pack(pady=5)
         
+        # Setting section
+        setting_frame = ttk.LabelFrame(top_warp_frame, text="Settings", padding=15)
+        setting_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
+        # ===========Language Combobox========================
+        lang_frame = ttk.Frame(setting_frame)
+        lang_frame.pack(fill='x', padx=10, pady=5)
+
+        ttk.Label(lang_frame, text="Language:").pack(side='left', padx=2)
+        from source_data_handler import LANGUAGE_MAP
+        lang_display_names = list(LANGUAGE_MAP.values())
+
+        self.lang_combobox = ttk.Combobox(lang_frame,
+                                          values=lang_display_names,
+                                          state="readonly",
+                                          width=15)
+        self.lang_combobox.set(LANGUAGE_MAP.get(get_system_language()))
+        self.lang_combobox.pack(side='left', padx=2)
+        self.lang_combobox.bind("<<ComboboxSelected>>",
+                                self.on_language_change)
+        # ============Theme Combobox===========================
+        theme_frame = ttk.Frame(setting_frame)
+        theme_frame.pack(fill='x', padx=10, pady=5)
+        theme_label = ttk.Label(theme_frame, text="Theme:")
+        theme_label.pack(side='left', padx=2)
+        self.theme_combobox = ttk.Combobox(theme_frame,
+                                           values=["Light", "Dark"],
+                                           state="readonly",
+                                           width=15)
+        self.theme_combobox.set("Light")
+        self.theme_combobox.pack(side='left', padx=2)
+        self.theme_combobox.bind("<<ComboboxSelected>>",
+                                 self.on_theme_change)
+
         # Stats section
         stats_frame = ttk.LabelFrame(container, text="Character Statistics", padding=15)
         stats_frame.pack(fill='x', pady=(0, 15))
@@ -1507,7 +1624,7 @@ class SaveEditorGUI:
         char_frame = ttk.LabelFrame(container, text="Select Character", padding=15)
         char_frame.pack(fill='both', expand=True)
         
-        ttk.Label(char_frame, text="Choose a character to load:", foreground='gray').pack(anchor='w', pady=(0, 10))
+        ttk.Label(char_frame, text="Choose a character to load:", foreground=sec_text_clr).pack(anchor='w', pady=(0, 10))
         
         # Scrollable character list
         canvas = tk.Canvas(char_frame, highlightthickness=0)
@@ -1765,13 +1882,15 @@ class SaveEditorGUI:
                     unlock_flag = vessel_data_info.get('unlockFlag', 0)
                     if is_unlocked or vessel_slot == 0:
                         relic_count = sum(1 for _, r in vessel_info.get('relics', []) if r is not None)
+                        unlocked_clr = self.color_theme.status["Unlocked"]
                         self.vessel_status_labels[vessel_slot].config(
                             text=f"✅ Unlocked ({relic_count}/6 relics)",
-                            foreground='green')
+                            foreground=unlocked_clr)
                     else:
+                        locked_clr = self.color_theme.status["Locked"]
                         self.vessel_status_labels[vessel_slot].config(
                             text=f"⚠️ Locked (Unlock Flag: {unlock_flag})",
-                            foreground='red')
+                            foreground=locked_clr)
 
             # Get relics for this vessel
             vessel_info = loadout.get(vessel_slot, {'relics': [], 'unlocked': False})
@@ -2086,9 +2205,9 @@ class SaveEditorGUI:
 
         # Show message if no presets
         if card_row == 0:
-            no_presets = tk.Label(self.presets_cards_frame,
-                                  text="No saved presets for this character",
-                                  font=('Segoe UI', 10, 'italic'), fg=FG_DIM, bg='#2a2a3d')
+            no_presets = ttk.Label(self.presets_cards_frame,
+                                   text="No saved presets for this character",
+                                   font=('Segoe UI', 10, 'italic'))
             no_presets.pack(pady=20)
             bind_scroll_recursive(no_presets)
 
@@ -3051,7 +3170,7 @@ class SaveEditorGUI:
         is_deep_slot = slot_index >= 3
 
         # Create dialog
-        dialog = tk.Toplevel(self.root)
+        dialog = tk.Toplevel(self.root, bg=self.color_theme.base["card_bg"])
         dialog_title = "Assign Relic" if is_empty_slot else "Replace Relic"
         dialog.title(f"{dialog_title} - Slot {slot_index + 1}")
         dialog.geometry("700x500")
@@ -3516,22 +3635,6 @@ class SaveEditorGUI:
                   style='Danger.TButton').pack(side='left', padx=5)
         ttk.Button(controls_frame, text="🔧 Mass Fix", command=self.mass_fix_incorrect_ids).pack(side='left', padx=5)
 
-        # ===========Language Combobox========================
-        lang_frame = ttk.Frame(self.inventory_tab)
-        lang_frame.pack(fill='x', padx=10, pady=5)
-
-        ttk.Label(lang_frame, text="Language:").pack(side='left', padx=2)
-        from source_data_handler import LANGUAGE_MAP
-        lang_display_names = list(LANGUAGE_MAP.values())
-
-        self.lang_combobox = ttk.Combobox(lang_frame,
-                                          values=lang_display_names,
-                                          state="readonly",
-                                          width=15)
-        self.lang_combobox.set(LANGUAGE_MAP.get(get_system_language()))
-        self.lang_combobox.pack(side='left', padx=2)
-        self.lang_combobox.bind("<<ComboboxSelected>>",
-                                self.on_language_change)
         # ====================================================
 
         legend_frame = ttk.Frame(self.inventory_tab)
@@ -3546,11 +3649,11 @@ class SaveEditorGUI:
         )
         self.illegal_count_label.pack(side='left', padx=(0, 15))
 
-        ttk.Label(legend_frame, text="Blue = Red + Orange", foreground=special_clr['illegal_unique']).pack(side='left', padx=5)
-        ttk.Label(legend_frame, text="Red = Illegal", foreground=status_clr['illegal']).pack(side='left', padx=5)
-        ttk.Label(legend_frame, text="Purple = Missing Curse", foreground=relic_clr["Purple"]).pack(side='left', padx=5)
-        ttk.Label(legend_frame, text="Orange = Unique Relic (don't edit)", foreground=special_clr['unique']).pack(side='left', padx=5)
-        ttk.Label(legend_frame, text="Teal = Strict Invalid", foreground=status_clr['strict_invalid']).pack(side='left', padx=5)
+        ttk.Label(legend_frame, text="Blue = Illegal Unique", foreground=special_clr['illegal_unique'], font=('Arial', 10, 'bold')).pack(side='left', padx=5)
+        ttk.Label(legend_frame, text="Red = Illegal", foreground=status_clr['illegal'], font=('Arial', 10, 'bold')).pack(side='left', padx=5)
+        ttk.Label(legend_frame, text="Purple = Missing Curse", foreground=relic_clr["Purple"], font=('Arial', 10, 'bold')).pack(side='left', padx=5)
+        ttk.Label(legend_frame, text="Orange = Unique Relic (don't edit)", foreground=special_clr['unique'], font=('Arial', 10, 'bold')).pack(side='left', padx=5)
+        ttk.Label(legend_frame, text="Teal = Strict Invalid", foreground=status_clr['strict_invalid'], font=('Arial', 10, 'bold')).pack(side='left', padx=5)
 
         # Search frame - Row 1: Basic search and filters
         search_frame = ttk.Frame(self.inventory_tab)
@@ -3620,6 +3723,7 @@ class SaveEditorGUI:
         head_img = self.fav_icon_img if self.color_theme._mode == 'light' else self.fav_icon_img_dark
         self.tree.heading('#0', image=head_img, anchor='center')
         self.tree.column('#0', width=60, minwidth=60)
+        self.tree.column('#', anchor='center')
 
         # Set column widths - more space for effect names
         col_widths = {
@@ -3690,7 +3794,7 @@ class SaveEditorGUI:
         ttk.Button(selection_frame, text="Deselect All", command=self.deselect_all_relics).pack(side='left', padx=2)
         selection_count_text = tk.StringVar()
         selection_count_text.set("0 selected")
-        self.selection_count_label = ttk.Label(selection_frame, textvariable=selection_count_text, foreground='blue', font=('Arial', 9, 'bold'))
+        self.selection_count_label = ttk.Label(selection_frame, textvariable=selection_count_text, foreground=self.color_theme.base["text_second"], font=('Arial', 9, 'bold'))
         self.selection_count_label.pack(side='left', padx=10)
         def update_selection_count():
             selected_count = len(self.tree.selection())
@@ -3729,6 +3833,11 @@ class SaveEditorGUI:
             self.refresh_inventory_and_vessels()
         else:
             messagebox.showerror("Error", "Can't change language.")
+
+    def on_theme_change(self, event=None):
+        _mode = self.theme_combobox.get()
+        self.color_theme.set_theme(_mode, self.root)
+        self.refresh_inventory_and_vessels()
 
     def open_file(self):
         global MODE, userdata_path
@@ -4040,6 +4149,10 @@ class SaveEditorGUI:
         for rank, relic in enumerate(sorted_by_acq, start=1):
             relic['acquisition_rank'] = rank
 
+        # Update Heading image
+        head_img = self.fav_icon_img if self.color_theme._mode == 'light' else self.fav_icon_img_dark
+        self.tree.heading('#0', image=head_img, anchor='center')
+
         # Apply current filter (if any)
         self.filter_relics()
             
@@ -4157,24 +4270,29 @@ class SaveEditorGUI:
         special = self.color_theme.special
         relics_clr = self.color_theme.relic
         status_clr = self.color_theme.status
+        base_clr = self.color_theme.base
         self.tree.tag_configure('both', foreground=special['illegal_unique'], font=('Arial', 9, 'bold'))
         self.tree.tag_configure('forbidden', foreground=special['unique'], font=('Arial', 9, 'bold'))
         self.tree.tag_configure('curse_illegal', foreground=relics_clr['Purple'], font=('Arial', 9, 'bold'))
         self.tree.tag_configure('illegal', foreground=status_clr['illegal'], font=('Arial', 9, 'bold'))
         self.tree.tag_configure('strict_invalid', foreground=status_clr['strict_invalid'], font=('Arial', 9))  # Teal for strict invalid
         self.tree.tag_configure('deep', foreground=relics_clr["Deep"])  # Subtle color for deep relics, no background
+        self.tree.tag_configure('odd', background=base_clr["main_bg"])
+        self.tree.tag_configure('even', background=base_clr["card_bg"])
 
         # sort filtered relics by acquisition rank
         # filtered_relics.sort(key=lambda r: r.get('acquisition_rank', 0), reverse=True)
 
         # Populate treeview with filtered results
-        for relic in filtered_relics:
+        for idx, relic in enumerate(filtered_relics):
             is_deep = relic.get('is_deep', False)
             deep_indicator = "🔮" if is_deep else ""  # Crystal ball emoji for deep relics
             is_favorite = relic.get('is_favorite', False)
+            
 
             # Build tags list - include 'deep' tag for deep relics
             tags = list(relic['tag_list'])
+            tags.append("odd" if idx % 2 == 0 else "even")
             if is_deep:
                 tags.append('deep')
 
@@ -5016,15 +5134,16 @@ class ModifyRelicDialog:
 
     def _update_color_display(self):
         """Update the current color label"""
-        color_map = {0: ("Red", "#ff6666"), 1: ("Blue", "#6666ff"),
-                     2: ("Yellow", "#cccc00"), 3: ("Green", "#66cc66")}
+        relic_clr = self.color_theme.relic
+        color_map = {0: ("Red", relic_clr["Red"]), 1: ("Blue", relic_clr["Blue"]),
+                     2: ("Yellow", relic_clr["Yellow"]), 3: ("Green", relic_clr["Green"])}
         try:
             current_relic_id = int(self.item_id_entry.get())
             color_idx = self.game_data._relic_table.loc[current_relic_id, "relicColor"]
-            color_name, color_hex = color_map.get(color_idx, ("Unknown", "gray"))
+            color_name, color_hex = color_map.get(color_idx, ("Unknown", relic_clr["Unknown"]))
             self.current_color_label.config(text=color_name, foreground=color_hex)
         except (KeyError, ValueError):
-            self.current_color_label.config(text="Unknown", foreground="gray")
+            self.current_color_label.config(text="Unknown", foreground=relic_clr["Unknown"])
 
     def _update_relic_structure_display(self):
         """Update the relic structure label showing effect/curse slots"""
@@ -5050,6 +5169,9 @@ class ModifyRelicDialog:
         self._update_color_display()
         self._update_relic_structure_display()
         self._update_relic_type_display()
+        item_id = int(self.item_id_entry.get())
+        item_name = self.game_data.relics[item_id].name
+        self.title_var.set(item_name)
 
     def _update_relic_type_display(self):
         """Update the relic type indicator (Original vs Scene/1.02)"""
@@ -5059,7 +5181,7 @@ class ModifyRelicDialog:
             self.relic_type_label.config(text=type_name, foreground=color_hex)
             self.relic_type_info_label.config(text=f"— {description}")
         except (KeyError, ValueError):
-            self.relic_type_label.config(text="Unknown", foreground="gray")
+            self.relic_type_label.config(text="Unknown", foreground=self.color_theme.relic["Unknown"])
             self.relic_type_info_label.config(text="")
 
     def _update_illegal_status_display(self, relic_id, effects):
@@ -5070,7 +5192,7 @@ class ModifyRelicDialog:
         try:
             pools = self.game_data.relics[relic_id].effect_slots
         except KeyError:
-            self.status_label.config(text="❌ ILLEGAL: Unknown Relic ID", foreground='red')
+            self.status_label.config(text="❌ ILLEGAL: Unknown Relic ID", foreground=self.color_theme.status["illegal"])
             self.illegal_reason_label.config(text=f"Relic ID {relic_id} does not exist in the game data.")
             return
 
@@ -5083,14 +5205,14 @@ class ModifyRelicDialog:
             is_strict_invalid = self.relic_checker.is_strict_invalid(relic_id, effects, invalid_reason) if self.relic_checker else False
             if is_strict_invalid:
                 strict_reason = self.relic_checker.get_strict_invalid_reason(relic_id, effects) if self.relic_checker else None
-                self.status_label.config(text="⚠️ STRICT INVALID", foreground='#008080')  # Teal color
+                self.status_label.config(text="⚠️ STRICT INVALID", foreground=self.color_theme.status["strict_invalid"])  # Teal color
                 reason_text = "This relic is technically valid but has effects with 0% drop weight in their assigned pools.\n"
                 if strict_reason:
                     reason_text += f"\n{strict_reason}\n"
                 reason_text += "\nThis may cause detection or unexpected behavior. Use 'Mass Fix' or 'Find Valid ID' to resolve."
                 self.illegal_reason_label.config(text=reason_text)
             else:
-                self.status_label.config(text="✅ VALID", foreground='green')
+                self.status_label.config(text="✅ VALID", foreground=self.color_theme.status["valid"])
                 self.illegal_reason_label.config(text="This relic configuration is legal and will work in-game.")
             return
 
@@ -5106,7 +5228,7 @@ class ModifyRelicDialog:
                 "• Effects are valid but in the WRONG ORDER",
                 "• Use 'Find Valid ID' button or 'Mass Fix' to automatically reorder"
             ]
-            self.status_label.config(text="❌ ILLEGAL (fixable)", foreground='#CC6600')
+            self.status_label.config(text="❌ ILLEGAL (fixable)", foreground=self.color_theme.status["fixable"])
             self.illegal_reason_label.config(text="\n".join(reasons))
             return
         
@@ -5116,7 +5238,7 @@ class ModifyRelicDialog:
                 "• There are more curse slots than needed for the assigned effects",
                 "• Use 'Find Valid ID' button or 'Mass Fix' to automatically find a better relic ID"
             ]
-            self.status_label.config(text="❌ ILLEGAL (fixable)", foreground='#CC6600')
+            self.status_label.config(text="❌ ILLEGAL (fixable)", foreground=self.color_theme.status["fixable"])
             self.illegal_reason_label.config(text="\n".join(reasons))
             return
 
@@ -5196,7 +5318,7 @@ class ModifyRelicDialog:
             reasons.append(f"• Invalid: {invalid_reason.name}")
 
         # Set the display
-        self.status_label.config(text="❌ ILLEGAL", foreground='red')
+        self.status_label.config(text="❌ ILLEGAL", foreground=self.color_theme.status["illegal"])
         self.illegal_reason_label.config(text="\n".join(reasons))
 
     def update_debug_info(self):
@@ -5357,7 +5479,9 @@ class ModifyRelicDialog:
         label_clr = self.color_theme.label
         
         # Title showing current relic
-        self.title_label = ttk.Label(self.dialog, text="", font=('Arial', 14, 'bold'))
+        self.title_var = tk.StringVar(value="")
+        self.title_label = ttk.Label(self.dialog, textvariable=self.title_var, font=('Arial', 14, 'bold'),
+                                     background=base_clr["main_bg"])
         self.title_label.pack(pady=10)
 
         # Main container with scrollbar
@@ -5482,19 +5606,21 @@ class ModifyRelicDialog:
         ttk.Label(color_btn_frame, text="Change to:").pack(side='left', padx=5)
 
         # Color buttons with actual colors
-        self.red_btn = tk.Button(color_btn_frame, text="🔴 Red", bg='#ffcccc', activebackground='#ff9999',
+        action_clr = self.color_theme.action
+        self.red_btn = ttk.Button(color_btn_frame, text="🔴 Red",
+                                  style="Red.TButton",
                                   command=lambda: self.change_relic_color(0))
         self.red_btn.pack(side='left', padx=3)
 
-        self.blue_btn = tk.Button(color_btn_frame, text="🔵 Blue", bg='#ccccff', activebackground='#9999ff',
+        self.blue_btn = ttk.Button(color_btn_frame, text="🔵 Blue", style="Blue.TButton",
                                    command=lambda: self.change_relic_color(1))
         self.blue_btn.pack(side='left', padx=3)
 
-        self.yellow_btn = tk.Button(color_btn_frame, text="🟡 Yellow", bg='#ffffcc', activebackground='#ffff99',
+        self.yellow_btn = ttk.Button(color_btn_frame, text="🟡 Yellow", style="Yellow.TButton",
                                      command=lambda: self.change_relic_color(2))
         self.yellow_btn.pack(side='left', padx=3)
 
-        self.green_btn = tk.Button(color_btn_frame, text="🟢 Green", bg='#ccffcc', activebackground='#99ff99',
+        self.green_btn = ttk.Button(color_btn_frame, text="🟢 Green", style="Green.TButton",
                                     command=lambda: self.change_relic_color(3))
         self.green_btn.pack(side='left', padx=3)
 
@@ -5541,7 +5667,8 @@ class ModifyRelicDialog:
         debug_frame.pack(fill='x', pady=5)
 
         self.debug_text = tk.Text(debug_frame, height=12, width=80, font=('Consolas', 9),
-                                   state='disabled', bg='#f5f5f5')
+                                   state='disabled', bg=self.color_theme.base["main_bg"],
+                                   fg=self.color_theme.base["text_main"])
         self.debug_text.pack(fill='x', padx=5, pady=5)
 
         ttk.Button(debug_frame, text="🔄 Refresh Debug Info",
@@ -6314,11 +6441,14 @@ class SearchDialog:
         self.dialog.geometry(f"+{target_x}+{target_y}")
     
     def setup_ui(self):
+        # Color Shortcut
+        base_clr = self.color_theme.base
+
         # Search entry
-        search_frame = ttk.Frame(self.dialog)
+        search_frame = ttk.Frame(self.dialog, style="Main.TFrame")
         search_frame.pack(fill='x', padx=10, pady=10)
         
-        ttk.Label(search_frame, text="Search:").pack(side='left', padx=5)
+        ttk.Label(search_frame, text="Search:", background=base_clr["main_bg"]).pack(side='left', padx=5)
         self.search_var = tk.StringVar()
         self.search_var.trace('w', lambda *args: self.filter_results())
         
@@ -6327,17 +6457,17 @@ class SearchDialog:
         search_entry.focus()
         
         # Warp Result frame and Filter frame
-        warp_frame = ttk.Frame(self.dialog)
+        warp_frame = ttk.Frame(self.dialog, style="Main.TFrame")
         warp_frame.pack(fill='both',expand=True, padx=10, pady=5)
         
         # Results listbox
-        results_frame = ttk.Frame(warp_frame)
+        results_frame = ttk.Frame(warp_frame, style="Main.TFrame")
         results_frame.pack(side='left', fill='both', expand=True, padx=10, pady=5)
         
         scrollbar = ttk.Scrollbar(results_frame)
         scrollbar.pack(side='right', fill='y')
         
-        self.listbox = tk.Listbox(results_frame, yscrollcommand=scrollbar.set)
+        self.listbox = tk.Listbox(results_frame, yscrollcommand=scrollbar.set, bg=base_clr["card_bg"], fg=base_clr["text_main"])
         self.listbox.pack(side='left', fill='both', expand=True)
         scrollbar.config(command=self.listbox.yview)
         
@@ -6345,8 +6475,10 @@ class SearchDialog:
         
         if self.search_type == "relics":
             # Filter Frame
-            filter_frame = ttk.Frame(warp_frame)
-            filter_frame.pack(side='left', fill='both', padx=10, pady=5)
+            filter_warp = ttk.LabelFrame(warp_frame, text="Filter", style="Main.TLabelframe")
+            filter_warp.pack(side='left', fill='both', padx=10)
+            filter_frame = ttk.Frame(filter_warp, padding=15)
+            filter_frame.pack(fill='both', expand=True)
             color_row = ttk.Frame(filter_frame)
             color_row.pack(fill='x')
             self.lock_color_var = tk.BooleanVar(value=True)
@@ -6364,8 +6496,8 @@ class SearchDialog:
             combobox_color = ttk.Combobox(color_row, textvariable=self.color_var, values=["Red", "Blue", "Yellow", "Green"],
                                           width=10, state="readonly")
             
-            checkbox_lock_color.pack(side='left', padx=5)
-            combobox_color.pack(side='left', padx=5)
+            checkbox_lock_color.pack(side='left', padx=5, pady=5)
+            combobox_color.pack(side='left', padx=5, pady=5)
             
             self.lock_color_var.trace('w', lambda *args: self.filter_results())
             self.color_var.trace('w', lambda *args: self.filter_results())
@@ -6378,24 +6510,24 @@ class SearchDialog:
             self.relic_type_var = tk.StringVar(value=cur_type)
             combobox_type = ttk.Combobox(type_row, textvariable=self.relic_type_var, values=["All", "Deep", "Normal"],
                                          width=10, state="readonly")
-            combobox_type.pack(side='left', padx=5)
+            combobox_type.pack(side='left')
             self.relic_type_var.trace('w', lambda *args: self.filter_results())
             
             # Structure filters
-            ttk.Label(filter_frame, text="Effect Slots:").pack(anchor='w', pady=(10, 0))
+            ttk.Label(filter_frame, text="Effect Slots:").pack(anchor='w', pady=(10, 0), padx=5)
             self.effect_slots_var = tk.StringVar(value="3")
-            ttk.Radiobutton(filter_frame, text="Any", variable=self.effect_slots_var, value="Any", command=self.filter_results).pack(anchor='w')
-            ttk.Radiobutton(filter_frame, text="1 Effect", variable=self.effect_slots_var, value="1", command=self.filter_results).pack(anchor='w')
-            ttk.Radiobutton(filter_frame, text="2 Effects", variable=self.effect_slots_var, value="2", command=self.filter_results).pack(anchor='w')
-            ttk.Radiobutton(filter_frame, text="3 Effects", variable=self.effect_slots_var, value="3", command=self.filter_results).pack(anchor='w')
+            ttk.Radiobutton(filter_frame, text="Any", variable=self.effect_slots_var, value="Any", command=self.filter_results).pack(anchor='w', padx=5)
+            ttk.Radiobutton(filter_frame, text="1 Effect", variable=self.effect_slots_var, value="1", command=self.filter_results).pack(anchor='w', padx=5)
+            ttk.Radiobutton(filter_frame, text="2 Effects", variable=self.effect_slots_var, value="2", command=self.filter_results).pack(anchor='w', padx=5)
+            ttk.Radiobutton(filter_frame, text="3 Effects", variable=self.effect_slots_var, value="3", command=self.filter_results).pack(anchor='w', padx=5)
 
-            ttk.Label(filter_frame, text="Curse Slots:").pack(anchor='w', pady=(10, 0))
+            ttk.Label(filter_frame, text="Curse Slots:").pack(anchor='w', pady=(10, 0), padx=5)
             self.curse_slots_var = tk.StringVar(value="Any")
-            ttk.Radiobutton(filter_frame, text="Any", variable=self.curse_slots_var, value="Any", command=self.filter_results).pack(anchor='w')
-            ttk.Radiobutton(filter_frame, text="0 Curses", variable=self.curse_slots_var, value="0", command=self.filter_results).pack(anchor='w')
-            ttk.Radiobutton(filter_frame, text="1 Curse", variable=self.curse_slots_var, value="1", command=self.filter_results).pack(anchor='w')
-            ttk.Radiobutton(filter_frame, text="2 Curses", variable=self.curse_slots_var, value="2", command=self.filter_results).pack(anchor='w')
-            ttk.Radiobutton(filter_frame, text="3 Curses", variable=self.curse_slots_var, value="3", command=self.filter_results).pack(anchor='w')
+            ttk.Radiobutton(filter_frame, text="Any", variable=self.curse_slots_var, value="Any", command=self.filter_results).pack(anchor='w', padx=5)
+            ttk.Radiobutton(filter_frame, text="0 Curses", variable=self.curse_slots_var, value="0", command=self.filter_results).pack(anchor='w', padx=5)
+            ttk.Radiobutton(filter_frame, text="1 Curse", variable=self.curse_slots_var, value="1", command=self.filter_results).pack(anchor='w', padx=5)
+            ttk.Radiobutton(filter_frame, text="2 Curses", variable=self.curse_slots_var, value="2", command=self.filter_results).pack(anchor='w', padx=5)
+            ttk.Radiobutton(filter_frame, text="3 Curses", variable=self.curse_slots_var, value="3", command=self.filter_results).pack(anchor='w', padx=5)
             
         # Populate initial results
         self.all_items = []
@@ -6413,7 +6545,7 @@ class SearchDialog:
         self.filter_results()
         
         # Buttons
-        button_frame = ttk.Frame(self.dialog)
+        button_frame = ttk.Frame(self.dialog, style="Main.TFrame")
         button_frame.pack(fill='x', padx=10, pady=10)
         
         ttk.Button(button_frame, text="Select", command=self.on_select).pack(side='right', padx=5)
@@ -6534,6 +6666,9 @@ class LoadoutSelector(tk.Toplevel):
         # Data Handlers
         self.inventory = InventoryHandler()
         self.game_data = SourceDataHandler()
+
+        # Color Theme
+        self.color_theme = ColorTheme()
         
         self.loadout_data = loadout_data
         self.selected_vessels = []
@@ -6547,18 +6682,19 @@ class LoadoutSelector(tk.Toplevel):
             "Green":  {"normal": "#4DFF4D", "deep": "#009600"},
             "White":  {"normal": "#FFFFFF", "deep": "#A9A9A9"}
         }
-        self.bg_color = "#242635"
+        self.bg_color = self.color_theme.base["card_bg"]
+        self.config(bg=self.color_theme.base["main_bg"])
 
         self._init_ui()
 
     def _init_ui(self):
         # Main Layout: Scrollable Canvas Setup
-        self.container = ttk.Frame(self)
+        self.container = ttk.Frame(self, style="Main.TFrame")
         self.container.pack(fill=tk.BOTH, expand=True)
 
-        self.canvas = tk.Canvas(self.container, highlightthickness=0)
+        self.canvas = tk.Canvas(self.container, highlightthickness=0, bg=self.color_theme.base["main_bg"])
         self.scrollbar = ttk.Scrollbar(self.container, orient="vertical", command=self.canvas.yview)
-        self.scroll_content = ttk.Frame(self.canvas)
+        self.scroll_content = ttk.Frame(self.canvas, style="Main.TFrame")
 
         self.scroll_content.bind(
             "<Configure>",
@@ -6576,20 +6712,25 @@ class LoadoutSelector(tk.Toplevel):
         self._build_section("Presets", self.loadout_data.get("presets", []), is_preset=True)
 
         # Control Panel
-        controls = ttk.Frame(self)
+        controls = ttk.Frame(self, style="Main.TFrame")
         controls.pack(fill=tk.X, side=tk.BOTTOM, pady=12, padx=12)
         ttk.Button(controls, text="Confirm Selection", command=self._handle_confirm).pack(side=tk.RIGHT, padx=6)
         ttk.Button(controls, text="Cancel", command=self.destroy).pack(side=tk.RIGHT)
 
     def _build_section(self, title: str, items: List[Dict], is_preset: bool):
         """Builds a UI section for either Vessels or Presets."""
-        header = ttk.Label(self.scroll_content, text=title, font=("Helvetica", 13, "bold"))
+        # Color
+        base_clr = self.color_theme.base
+        active_clr = self.color_theme.action
+
+        header = ttk.Label(self.scroll_content, text=title, font=("Helvetica", 13, "bold"),
+                           background=base_clr["main_bg"])
         header.pack(anchor="w", pady=(15, 5), padx=10)
 
         for i, item in enumerate(items):
             # Outer frame for each loadout item
             
-            frame = tk.LabelFrame(self.scroll_content, bg=self.bg_color, fg="white", bd=1)
+            frame = tk.LabelFrame(self.scroll_content, bg=self.bg_color, fg=base_clr["text_main"], bd=1)
             frame.pack(fill=tk.X, padx=15, pady=8)
 
             var = tk.BooleanVar(value=True)
@@ -6597,8 +6738,8 @@ class LoadoutSelector(tk.Toplevel):
             
             name = item.get("name") if is_preset else self.game_data.vessels[item.get('vessel_id')].name
             chk = tk.Checkbutton(frame, text=name, variable=var, 
-                               bg=self.bg_color, fg="white", selectcolor="#444444",
-                               activebackground=self.bg_color, font=("Helvetica", 12, "bold"))
+                               bg=self.bg_color, fg=base_clr["text_main"], selectcolor=base_clr["main_bg"],
+                               activebackground=self.bg_color, font=("Helvetica", 14, "bold"))
             chk.pack(anchor="w", padx=5, pady=5)
 
             # Relics Detail Container
@@ -6620,10 +6761,12 @@ class LoadoutSelector(tk.Toplevel):
         color_info = self.color_palette.get(static_data.color, self.color_palette["White"])
         is_deep = self.game_data.relics[state.real_item_id].is_deep()
         text_color = color_info["deep"] if is_deep else color_info["normal"]
+        base_clr = self.color_theme.base
+        action_clr = self.color_theme.action
 
         # Relic Header (Name)
         tk.Label(parent, text=f"◆ {static_data.name}", fg=text_color, bg=self.bg_color, 
-                 font=("Helvetica", 10, "bold")).pack(anchor="w")
+                 font=("Helvetica", 12, "bold")).pack(anchor="w")
 
         # Slicing Logic: [0:3] are effects, [3:6] are curses
         ids = state.effects_and_curses
@@ -6638,14 +6781,14 @@ class LoadoutSelector(tk.Toplevel):
             # Left: Effect
             if j < len(effects_ids) and effects_ids[j] != 0: # Check if ID is valid (not 0)
                 eff_name = self.game_data.effects[effects_ids[j]].name
-                tk.Label(row, text=f" • {eff_name}", fg=text_color, bg=self.bg_color, 
-                         font=("Helvetica", 9)).pack(side=tk.LEFT)
+                tk.Label(row, text=f" • {eff_name}", fg=base_clr['text_main'], bg=self.bg_color, 
+                         font=("Helvetica", 10)).pack(side=tk.LEFT)
 
             # Right: Curse
-            if j < len(curses_ids) and curses_ids[j] != 0:
+            if j < len(curses_ids) and curses_ids[j] not in [-1, 0, 0xffffffff]:
                 cur_name = self.game_data.effects[curses_ids[j]].name
-                tk.Label(row, text=f"   ❗{cur_name}", fg=text_color, bg=self.bg_color, 
-                         font=("Helvetica", 9, "italic")).pack(side=tk.LEFT)
+                tk.Label(row, text=f"   ❗{cur_name}", fg=action_clr['highlight'], bg=self.bg_color, 
+                         font=("Helvetica", 10, "italic")).pack(side=tk.LEFT)
 
     def _handle_confirm(self):
         """Finalize indices and close."""
