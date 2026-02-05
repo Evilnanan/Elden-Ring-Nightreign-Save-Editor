@@ -22,6 +22,13 @@ A powerful and user-friendly save editor for **Nightreign**, focused on full con
 - Multi-language support
 
 ---
+
+## Running Editor manually
+
+1. Install [uv](https://docs.astral.sh/uv/getting-started/installation)
+2. Clone the repo with: `git clone https://github.com/alfizari/Elden-Ring-Nightreign-Save-Editor`
+3. Run the editor with: `uv run src/Final.py`
+
 ## 🖥️ How to Use
 
 ### PC (Steam / Seamless Co-op)
