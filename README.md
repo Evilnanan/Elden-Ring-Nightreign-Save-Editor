@@ -14,6 +14,7 @@ A powerful and user-friendly save editor for **Nightreign**, focused on full con
 - Modify Relic effect IDs and values  
 - Delete Relics  
 - Export & import Relics via **Excel**  
+- One-click fix illegal Relics if fixable 
 
 ### 💎 Save Editing
 - Edit **Murks** and **Sigs**
@@ -21,9 +22,36 @@ A powerful and user-friendly save editor for **Nightreign**, focused on full con
 - Improved **illegal relic detection**
 - Multi-language support
 
+### 🛡️ Automatic Backup System
+To ensure data safety, the editor performs an automatic backup every time a save file is opened.
+
+* **Cycle Backups**: The system automatically stores backups in the `/backup` folder within the application directory. It maintains the **5 most recent versions** on a rolling basis.
+* **Root Backup (Protected)**: 
+    * The system creates a one-time **"Root" backup** that will never be overwritten.
+    * **For new users**: This serves as a permanent copy of your "Pure" (unmodified) save.
+    * **For existing users**: This acts as a "Last Resort" recovery point to prevent permanent save corruption.
+
+### ⚙️ Vessel and Preset Management
+
+* **Relic Configuration**: Customize and edit Relic combinations for both Vessels and Presets.
+* **Save as Preset**: Quickly save your current Vessel configuration as a Preset.
+* **Loadout Export**: Export the specific loadout of a selected character for backup or sharing.
+* **Selective Loadout Import**: Import specific loadouts with a flexible selection tool.
+* **Safe Relic Auto-Addition**: When importing a loadout containing Relics not present in your save, the system will automatically add them (excluding **Unique Relics**).
+* **Vessel Unlock Detection**: Automatically detects the unlock status of various Vessels.
+    > **Note**: Character unlock parsing is currently a work in progress. By default, the initial Vessels for all characters are marked as "Unlocked."
+
+#### 🔍 Definition: Unique Relics
+To **avoid violation detection**, the system will not auto-generate **Unique Relics**. These are defined as:
+* Relics obtained by **defeating Bosses**.
+* Relics purchased from the **'Small Jar Bazaar'** or the **'Collector Signboard'**.
+
+#### ⚠️ Important Usage Notes
+* **Deep Mode & Deep Relics**: There is currently no complete detection mechanism for Deep Mode/Deep Relic unlock status. 
+* **Recommendation**: It is highly recommended to **manually unlock Deep Mode in-game** before importing other players' loadouts to ensure compatibility.
 ---
 
-## Running Editor manually
+## 💻 Running Editor manually
 
 1. Install [uv](https://docs.astral.sh/uv/getting-started/installation)
 2. Clone the repo with: `git clone https://github.com/alfizari/Elden-Ring-Nightreign-Save-Editor`
@@ -80,10 +108,17 @@ lxml >= 6.0.2
 openpyxl >= 3.1.5
 orjson >= 3.11.5
 pandas >= 2.3.3
+pillow>=12.1.0
 ```
 ```bash
-pip install cryptography lxml openpyxl orjson pandas
+pip install cryptography lxml openpyxl orjson pandas pillow
 ```
+or sync with [uv](https://docs.astral.sh/uv/getting-started/installation)
+
+```bash
+uv sync
+```
+
 
 ---
 
