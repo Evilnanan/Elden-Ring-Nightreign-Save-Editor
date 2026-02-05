@@ -36,6 +36,7 @@ class ItemState:
         self.type_bits = 0
         self.data: bytearray = bytes.fromhex('00000000FFFFFFFF')
         self.size = 8
+        self.index = -1
 
     @classmethod
     def create_dummy_relic(cls, instance_id, relic_type: str = "normal"):
@@ -512,6 +513,7 @@ class InventoryHandler:
             for i in range(self.STATE_SLOT_COUNT):
                 state = ItemState()
                 state.from_bytes(globals.data, cur_offset)
+                state.index = i
                 self.states.append(state)
                 if state.ga_handle != 0:
                     state_ga_to_index[state.ga_handle] = i
@@ -599,6 +601,7 @@ class InventoryHandler:
 
             # Replace Item State data
             old_size = self.states[empty_state_index].size
+            dummy_relic.index = empty_state_index
             self.states[empty_state_index] = dummy_relic
             _new_state_data = self.states[empty_state_index].data
             _cur_offset = self.START_OFFEST + sum(state.size for state in self.states[:empty_state_index])
@@ -678,27 +681,43 @@ class InventoryHandler:
                 raise TypeError("Only relics can be modified")
 
             logger.info("Modifying relic in inventory")
-            target_state_index = -1
-            for i in range(self.STATE_SLOT_KEEP_COUNT, self.STATE_SLOT_COUNT):
-                if self.states[i].ga_handle == ga_handle:
-                    target_state_index = i
-                    if relic_id is not None:
-                        self.states[target_state_index].set_real_id(relic_id)
-                    if effect_1 is not None:
-                        self.states[target_state_index].effect_1 = effect_1
-                    if effect_2 is not None:
-                        self.states[target_state_index].effect_2 = effect_2
-                    if effect_3 is not None:
-                        self.states[target_state_index].effect_3 = effect_3
-                    if curse_1 is not None:
-                        self.states[target_state_index].curse_1 = curse_1
-                    if curse_2 is not None:
-                        self.states[target_state_index].curse_2 = curse_2
-                    if curse_3 is not None:
-                        self.states[target_state_index].curse_3 = curse_3
-                    break
-            else:
-                raise ValueError("Relic not found in inventory")
+            target_state_index = self.relics[ga_handle].state.index
+
+            if relic_id is not None:
+                self.states[target_state_index].set_real_id(relic_id)
+            if effect_1 is not None:
+                self.states[target_state_index].effect_1 = effect_1
+            if effect_2 is not None:
+                self.states[target_state_index].effect_2 = effect_2
+            if effect_3 is not None:
+                self.states[target_state_index].effect_3 = effect_3
+            if curse_1 is not None:
+                self.states[target_state_index].curse_1 = curse_1
+            if curse_2 is not None:
+                self.states[target_state_index].curse_2 = curse_2
+            if curse_3 is not None:
+                self.states[target_state_index].curse_3 = curse_3
+
+            # for i in range(self.STATE_SLOT_KEEP_COUNT, self.STATE_SLOT_COUNT):
+            #     if self.states[i].ga_handle == ga_handle:
+            #         target_state_index = i
+            #         if relic_id is not None:
+            #             self.states[target_state_index].set_real_id(relic_id)
+            #         if effect_1 is not None:
+            #             self.states[target_state_index].effect_1 = effect_1
+            #         if effect_2 is not None:
+            #             self.states[target_state_index].effect_2 = effect_2
+            #         if effect_3 is not None:
+            #             self.states[target_state_index].effect_3 = effect_3
+            #         if curse_1 is not None:
+            #             self.states[target_state_index].curse_1 = curse_1
+            #         if curse_2 is not None:
+            #             self.states[target_state_index].curse_2 = curse_2
+            #         if curse_3 is not None:
+            #             self.states[target_state_index].curse_3 = curse_3
+            #         break
+            # else:
+            #     raise ValueError("Relic not found in inventory")
             self.update_relic_state(target_state_index)
             self.update_illegal(ga_handle,
                                 self.states[target_state_index].real_item_id,
