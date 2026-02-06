@@ -11,7 +11,7 @@ Refactor Summary:
 TODO:
     Unlock State Parse
     Update Checker
-    Dark Mode
+    UI Text Multi-Language Support
 """
 from main_file import decrypt_ds2_sl2, encrypt_modified_files
 from main_file_import import decrypt_ds2_sl2_import
@@ -29,6 +29,7 @@ import inspect
 import zipfile
 from datetime import datetime
 from PIL import Image, ImageTk
+import gettext
 # project modules
 from log_config import setup_logging
 from basic_class import Item
@@ -1455,6 +1456,44 @@ class SaveEditorGUI:
 
         # Try to load last opened file after UI is set up
         self.root.after(100, self.try_load_last_file)
+
+    def refresh_ui_text(self):
+        self.notebook.tab(0, text=_("File Management"))
+        self.notebook.tab(1, text=_("Relics"))
+        self.notebook.tab(2, text=_("Vessels"))
+
+        # File Management Tab
+        self.file_frame.configure(text=_("Save File Management"))
+        self.ft_info_label.configure(text=_("Load your Elden Ring NightReign save file to begin editing"))
+        self.ft_btn_open.configure(text=_("📁 Open Save File"))
+        self.ft_btn_save.configure(text=_("💾 Save Modified File"))
+        self.ft_btn_import.configure(text=_("💾 Import save (PC/PS4)"))
+        self.ft_setting_frame.configure(text=_("Settings"))
+        self.ft_lb_language.configure(text=_("Language:"))
+        self.ft_lb_theme.configure(text=_("Theme:"))
+        self.ft_stats_frame.configure(text=_("Character Statistics"))
+        self.ft_lb_murks.configure(text=_("Murks:"))
+        self.ft_btn_murks.configure(text=_("Edit"))
+        self.ft_lb_sigs.configure(text=_("Sigs:"))
+        self.ft_btn_sigs.configure(text=_("Edit"))
+        self.ft_btn_refresh.configure(text=_("🔄 Refresh Stats"))
+        self.ft_char_frame.configure(text=_("Select Character"))
+        self.ft_lb_cha_choose.configure(text=_("Choose a character to load:"))
+
+        # Inventory Tab
+        self.it_btn_add_relic.configure(text=_("➕ Add Relic"))
+        self.it_btn_refresh.configure(text=_("🔄 Refresh Inventory"))
+        self.it_btn_export.configure(text=_("📤 Export to Excel"))
+        self.it_btn_import.configure(text=_("📥 Import from Excel"))
+        self.it_btn_delete_all.configure(text=_("🗑️ Delete All Illegal"))
+        self.it_btn_delete_slct.configure(text=_("🗑️ Mass Delete Selected"))
+        self.it_btn_mfix.configure(text=_("🔧 Mass Fix"))
+        self.it_lb_blue.configure(text=_("Blue = Illegal Unique"))
+        self.it_lb_orange.configure(text=_("Orange = Unique Relic (don't edit)"))
+        self.it_lb_red.configure(text=_("Red = Illegal"))
+        self.it_lb_purple.configure(text=_("Purple = Missing Curse"))
+        self.it_lb_teal.configure(text=_("Teal = Strict Invalid"))
+        self.it_lb_search.configure(text=_("🔍 Search:"))
         
     def run_task_async(self, task_func, args=(), title="Processing",
                        label_text="Please wait...",
@@ -1600,28 +1639,35 @@ class SaveEditorGUI:
         top_warp_frame.pack(fill='x', pady=(0, 15))
         
         # File loading section
-        file_frame = ttk.LabelFrame(top_warp_frame, text="Save File Management", padding=15)
-        file_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
+        self.file_frame = ttk.LabelFrame(top_warp_frame, text="Save File Management", padding=15)
+        self.file_frame.grid(row=0, column=0, sticky='nsew', padx=5, pady=5)
         
-        info_label = ttk.Label(file_frame, text="Load your Elden Ring NightReign save file to begin editing", 
-                               style="Seconary.TLabel")
-        info_label.pack(pady=(0, 10))
+        self.ft_info_label = ttk.Label(self.file_frame, text="Load your Elden Ring NightReign save file to begin editing", 
+                                       style="Seconary.TLabel")
+        self.ft_info_label.pack(pady=(0, 10))
         
-        ttk.Button(file_frame, text="📁 Open Save File", command=self.open_file, width=20).pack(pady=5)
-        ttk.Button(file_frame, text="💾 Save Modified File", command=self.save_changes, width=20).pack(pady=5)
-        ttk.Button(file_frame, text="💾 Import save (PC/PS4)", command=self.import_save_tk, width=20).pack(pady=5)
+        self.ft_btn_open = ttk.Button(self.file_frame, text="📁 Open Save File",
+                                      command=self.open_file, width=20)
+        self.ft_btn_open.pack(pady=5)
+        self.ft_btn_save = ttk.Button(self.file_frame, text="💾 Save Modified File",
+                                      command=self.save_changes, width=20)
+        self.ft_btn_save.pack(pady=5)
+        self.ft_btn_import = ttk.Button(self.file_frame, text="💾 Import save (PC/PS4)",
+                                        command=self.import_save_tk, width=20)
+        self.ft_btn_import.pack(pady=5)
         
         # Setting section
-        setting_frame = ttk.LabelFrame(top_warp_frame, text="Settings", padding=15)
-        setting_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
+        self.ft_setting_frame = ttk.LabelFrame(top_warp_frame, text="Settings", padding=15)
+        self.ft_setting_frame.grid(row=0, column=1, sticky='nsew', padx=5, pady=5)
         # ===========Language Combobox========================
-        lang_frame = ttk.Frame(setting_frame)
+        lang_frame = ttk.Frame(self.ft_setting_frame)
         lang_frame.columnconfigure(0, weight=1)
         lang_frame.columnconfigure(1, weight=1)
         lang_frame.rowconfigure(0, weight=1)
         lang_frame.pack(fill='x', padx=10, pady=5)
 
-        ttk.Label(lang_frame, text="Language:").grid(row=0, column=0, padx=2)
+        self.ft_lb_language = ttk.Label(lang_frame, text="Language:")
+        self.ft_lb_language.grid(row=0, column=0, padx=2)
         from source_data_handler import LANGUAGE_MAP
         lang_display_names = list(LANGUAGE_MAP.values())
 
@@ -1634,13 +1680,13 @@ class SaveEditorGUI:
         self.lang_combobox.bind("<<ComboboxSelected>>",
                                 self.on_language_change)
         # ============Theme Combobox===========================
-        theme_frame = ttk.Frame(setting_frame)
+        theme_frame = ttk.Frame(self.ft_setting_frame)
         theme_frame.columnconfigure(0, weight=1)
         theme_frame.columnconfigure(1, weight=1)
         theme_frame.rowconfigure(0, weight=1)
         theme_frame.pack(fill='x', padx=10, pady=5)
-        theme_label = ttk.Label(theme_frame, text="Theme:")
-        theme_label.grid(row=0, column=0, padx=2)
+        self.ft_lb_theme = ttk.Label(theme_frame, text="Theme:")
+        self.ft_lb_theme.grid(row=0, column=0, padx=2)
         self.theme_combobox = ttk.Combobox(theme_frame,
                                            values=["Light", "Dark"],
                                            state="readonly",
@@ -1651,38 +1697,45 @@ class SaveEditorGUI:
                                  self.on_theme_change)
 
         # Stats section
-        stats_frame = ttk.LabelFrame(container, text="Character Statistics", padding=15)
-        stats_frame.pack(fill='x', pady=(0, 15))
+        self.ft_stats_frame = ttk.LabelFrame(container, text="Character Statistics", padding=15)
+        self.ft_stats_frame.pack(fill='x', pady=(0, 15))
         
         # Murks row
-        murks_row = ttk.Frame(stats_frame)
+        murks_row = ttk.Frame(self.ft_stats_frame)
         murks_row.pack(fill='x', pady=5)
         
-        ttk.Label(murks_row, text="Murks:", font=('Arial', 11, 'bold'), width=15).pack(side='left')
+        self.ft_lb_murks = ttk.Label(murks_row, text="Murks:", font=('Arial', 11, 'bold'), width=15)
+        self.ft_lb_murks.pack(side='left')
         self.murks_display = ttk.Label(murks_row, text="N/A", font=('Arial', 11), style="MurkSig.TLabel")
         self.murks_display.pack(side='left', padx=10)
-        ttk.Button(murks_row, text="Edit", command=self.modify_murks, width=10).pack(side='right', padx=5)
+        self.ft_btn_murks = ttk.Button(murks_row, text="Edit", command=self.modify_murks, width=10)
+        self.ft_btn_murks.pack(side='right', padx=5)
         
         # Sigs row
-        sigs_row = ttk.Frame(stats_frame)
+        sigs_row = ttk.Frame(self.ft_stats_frame)
         sigs_row.pack(fill='x', pady=5)
         
-        ttk.Label(sigs_row, text="Sigs:", font=('Arial', 11, 'bold'), width=15).pack(side='left')
+        self.ft_lb_sigs = ttk.Label(sigs_row, text="Sigs:", font=('Arial', 11, 'bold'), width=15)
+        self.ft_lb_sigs.pack(side='left')
         self.sigs_display = ttk.Label(sigs_row, text="N/A", font=('Arial', 11), style="MurkSig.TLabel")
         self.sigs_display.pack(side='left', padx=10)
-        ttk.Button(sigs_row, text="Edit", command=self.modify_sigs, width=10).pack(side='right', padx=5)
+        self.ft_btn_sigs = ttk.Button(sigs_row, text="Edit", command=self.modify_sigs, width=10)
+        self.ft_btn_sigs.pack(side='right', padx=5)
         
-        ttk.Button(stats_frame, text="🔄 Refresh Stats", command=self.refresh_stats).pack(pady=(10, 0))
+        self.ft_btn_refresh = ttk.Button(self.ft_stats_frame, text="🔄 Refresh Stats",
+                                         command=self.refresh_stats)
+        self.ft_btn_refresh.pack(pady=(10, 0))
         
         # Character selection section
-        char_frame = ttk.LabelFrame(container, text="Select Character", padding=15)
-        char_frame.pack(fill='both', expand=True)
+        self.ft_char_frame = ttk.LabelFrame(container, text="Select Character", padding=15)
+        self.ft_char_frame.pack(fill='both', expand=True)
         
-        ttk.Label(char_frame, text="Choose a character to load:", style="Seconary.TLabel").pack(anchor='w', pady=(0, 10))
+        self.ft_lb_cha_choose = ttk.Label(self.ft_char_frame, text="Choose a character to load:", style="Seconary.TLabel")
+        self.ft_lb_cha_choose.pack(anchor='w', pady=(0, 10))
         
         # Scrollable character list
-        canvas = tk.Canvas(char_frame, highlightthickness=0)
-        scrollbar = ttk.Scrollbar(char_frame, orient="vertical", command=canvas.yview)
+        canvas = tk.Canvas(self.ft_char_frame, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.ft_char_frame, orient="vertical", command=canvas.yview)
         self.char_button_frame = ttk.Frame(canvas)
         
         canvas.configure(yscrollcommand=scrollbar.set)
@@ -3674,16 +3727,35 @@ class SaveEditorGUI:
         controls_frame = ttk.Frame(self.inventory_tab)
         controls_frame.pack(fill='x', padx=10, pady=5)
         
-        ttk.Button(controls_frame, text="➕ Add Relic", style='Add.TButton',
-                  command=self.add_relic_tk).pack(side="left", padx=5)
-        ttk.Button(controls_frame, text="🔄 Refresh Inventory", command=self.reload_inventory).pack(side='left', padx=5)
-        ttk.Button(controls_frame, text="📤 Export to Excel", command=self.export_relics).pack(side='left', padx=5)
-        ttk.Button(controls_frame, text="📥 Import from Excel", command=self.import_relics).pack(side='left', padx=5)
-        ttk.Button(controls_frame, text="🗑️ Delete All Illegal", command=self.delete_all_illegal,
-                  style='Danger.TButton').pack(side='left', padx=5)
-        ttk.Button(controls_frame, text="🗑️ Mass Delete Selected", command=self.mass_delete_relics,
-                  style='Danger.TButton').pack(side='left', padx=5)
-        ttk.Button(controls_frame, text="🔧 Mass Fix", command=self.mass_fix_incorrect_ids).pack(side='left', padx=5)
+        self.it_btn_add_relic = ttk.Button(controls_frame, text="➕ Add Relic",
+                                           style='Add.TButton',
+                                           command=self.add_relic_tk)
+        self.it_btn_add_relic.pack(side="left", padx=5)
+
+        self.it_btn_refresh = ttk.Button(controls_frame, text="🔄 Refresh Inventory", command=self.reload_inventory)
+        self.it_btn_refresh.pack(side='left', padx=5)
+
+        self.it_btn_export = ttk.Button(controls_frame, text="📤 Export to Excel", command=self.export_relics)
+        self.it_btn_export.pack(side='left', padx=5)
+
+        self.it_btn_import = ttk.Button(controls_frame, text="📥 Import from Excel", command=self.import_relics)
+        self.it_btn_import.pack(side='left', padx=5)
+
+        self.it_btn_delete_all = ttk.Button(controls_frame,
+                                            text="🗑️ Delete All Illegal",
+                                            command=self.delete_all_illegal,
+                                            style='Danger.TButton')
+        self.it_btn_delete_all.pack(side='left', padx=5)
+
+        self.it_btn_delete_slct = ttk.Button(controls_frame,
+                                             text="🗑️ Mass Delete Selected",
+                                             command=self.mass_delete_relics,
+                                             style='Danger.TButton')
+        self.it_btn_delete_slct.pack(side='left', padx=5)
+
+        self.it_btn_mfix = ttk.Button(controls_frame, text="🔧 Mass Fix",
+                                      command=self.mass_fix_incorrect_ids)
+        self.it_btn_mfix.pack(side='left', padx=5)
 
         # ====================================================
 
@@ -3699,17 +3771,23 @@ class SaveEditorGUI:
         )
         self.illegal_count_label.pack(side='left', padx=(0, 15))
 
-        ttk.Label(legend_frame, text="Blue = Illegal Unique", style="illegalUnique.TLabel").pack(side='left', padx=5)
-        ttk.Label(legend_frame, text="Red = Illegal", style="illegal.TLabel").pack(side='left', padx=5)
-        ttk.Label(legend_frame, text="Purple = Missing Curse", style="MissingCurse.TLabel").pack(side='left', padx=5)
-        ttk.Label(legend_frame, text="Orange = Unique Relic (don't edit)", style="Unique.TLabel").pack(side='left', padx=5)
-        ttk.Label(legend_frame, text="Teal = Strict Invalid", style="StrictInvalid.TLabel").pack(side='left', padx=5)
+        self.it_lb_blue = ttk.Label(legend_frame, text="Blue = Illegal Unique", style="illegalUnique.TLabel")
+        self.it_lb_blue.pack(side='left', padx=5)
+        self.it_lb_red = ttk.Label(legend_frame, text="Red = Illegal", style="illegal.TLabel")
+        self.it_lb_red.pack(side='left', padx=5)
+        self.it_lb_purple = ttk.Label(legend_frame, text="Purple = Missing Curse", style="MissingCurse.TLabel")
+        self.it_lb_purple.pack(side='left', padx=5)
+        self.it_lb_orange = ttk.Label(legend_frame, text="Orange = Unique Relic (don't edit)", style="Unique.TLabel")
+        self.it_lb_orange.pack(side='left', padx=5)
+        self.it_lb_teal = ttk.Label(legend_frame, text="Teal = Strict Invalid", style="StrictInvalid.TLabel")
+        self.it_lb_teal.pack(side='left', padx=5)
 
         # Search frame - Row 1: Basic search and filters
         search_frame = ttk.Frame(self.inventory_tab)
         search_frame.pack(fill='x', padx=10, pady=5)
 
-        ttk.Label(search_frame, text="🔍 Search:").pack(side='left', padx=5)
+        self.it_lb_search = ttk.Label(search_frame, text="🔍 Search:")
+        self.it_lb_search.pack(side='left', padx=5)
         self.search_var = tk.StringVar()
         self.search_var.trace('w', lambda *args: self.filter_relics())
 
