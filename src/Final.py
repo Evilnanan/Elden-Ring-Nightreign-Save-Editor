@@ -3395,7 +3395,7 @@ class SaveEditorGUI:
             if success:
                 dialog.destroy()
                 self.refresh_vessels()
-                messagebox.showinfo("Success", "Relic replaced successfully!")
+                # messagebox.showinfo("Success", "Relic replaced successfully!")
 
         ttk.Button(btn_frame, text="Replace", command=do_replace).pack(side='left', padx=5)
         ttk.Button(btn_frame, text="Cancel", command=dialog.destroy).pack(side='left', padx=5)
@@ -4208,10 +4208,6 @@ class SaveEditorGUI:
             
     def refresh_inventory_lightly(self):
         """Refresh the inventory UI without heavy loading"""
-
-        if globals.data is None:
-            messagebox.showwarning("Warning", "No character loaded")
-            return
         self.reparse()
         self.refresh_inventory_ui()
         
@@ -4880,7 +4876,7 @@ class SaveEditorGUI:
                 relic_type=relic_type_selector.result
             )
             if added_result:
-                messagebox.showinfo("Success", "Dummy relic added. Refreshing inventory.")
+                # messagebox.showinfo("Success", "Dummy relic added. Refreshing inventory.")
                 self.refresh_inventory_and_vessels()
                 # Find Added item by new_ga
                 for item in self.tree.get_children():
@@ -5763,7 +5759,7 @@ class ModifyRelicDialog:
                     entry.insert(0, str(sorted_effects[i]))
                     self.on_effect_change(i)  # Update name labels
 
-                messagebox.showinfo("Auto Sort", "Effects sorted successfully!\nCurses remain paired with their corresponding effects.")
+                # messagebox.showinfo("Auto Sort", "Effects sorted successfully!\nCurses remain paired with their corresponding effects.")
             else:
                 messagebox.showerror("Error", "Relic checker not initialized")
 
@@ -6428,7 +6424,7 @@ class ModifyRelicDialog:
             if self.inventory.modify_relic(self.ga_handle,
                                            new_item_id,
                                            *new_effects):
-                messagebox.showinfo("Success", "Relic modified successfully")
+                # messagebox.showinfo("Success", "Relic modified successfully")
                 self.callback()
                 # Update current item_id if it was changed
                 if new_item_id is not None:
