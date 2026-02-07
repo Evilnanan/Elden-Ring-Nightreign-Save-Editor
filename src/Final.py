@@ -12,6 +12,8 @@ TODO:
     Unlock State Parse
     Update Checker
     UI Text Multi-Language Support
+    Settings and Settings Management
+    Switchable message settings
 """
 from main_file import decrypt_ds2_sl2, encrypt_modified_files
 from main_file_import import decrypt_ds2_sl2_import
