@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2026-02-07 18:26+0800\n"
-"PO-Revision-Date: 2026-02-07 18:27+0800\n"
+"POT-Creation-Date: 2026-02-07 18:48+0800\n"
+"PO-Revision-Date: 2026-02-07 18:49+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: zh_TW\n"
@@ -58,189 +58,198 @@ msgstr "語言："
 msgid "Theme:"
 msgstr "主題："
 
-#: Final.py:1986
+#: Final.py:1996
+msgid ""
+"Reduce Message Pop: This will remove certain potentially unnecessary success "
+"messages."
+msgstr "減少訊息彈出：此設定將移除某些可能不必要的成功訊息。"
+
+#: Final.py:2004
 msgid "Character Statistics"
 msgstr "角色統計數據"
 
-#: Final.py:1996
+#: Final.py:2014
 msgid "Murks:"
 msgstr "暗痕:"
 
-#: Final.py:2005 Final.py:2024
+#: Final.py:2023 Final.py:2042
 msgid "Edit"
 msgstr "編輯"
 
-#: Final.py:2015
+#: Final.py:2033
 msgid "Sigs:"
 msgstr "王之印記:"
 
-#: Final.py:2030
+#: Final.py:2048
 msgid "🔄 Refresh Stats"
 msgstr "🔄 重新整理統計數據"
 
-#: Final.py:2037
+#: Final.py:2055
 msgid "Select Character"
 msgstr "選擇角色"
 
-#: Final.py:2045
+#: Final.py:2063
 msgid "Choose a character to load:"
 msgstr "選擇要載入的角色："
 
-#: Final.py:2073
+#: Final.py:2091
 msgid "🔄 Refresh"
 msgstr "🔄 重新整理"
 
-#: Final.py:2078
+#: Final.py:2096
 msgid "💾 Save Loadout"
 msgstr "💾 儲存配裝"
 
-#: Final.py:2083
+#: Final.py:2101
 msgid "📂 Load Loadout"
 msgstr "📂 載入配裝"
 
-#: Final.py:2088
+#: Final.py:2106
 msgid "Character:"
 msgstr "角色："
 
-#: Final.py:2167
+#: Final.py:2185
 msgid "New Preset Name"
 msgstr "新的預置配裝名稱"
 
-#: Final.py:2172
+#: Final.py:2190
 msgid "Enter name for new preset:"
 msgstr "輸入預置配裝名稱："
 
-#: Final.py:2186
+#: Final.py:2204
 msgid "Preset name cannot be empty"
 msgstr "預置配裝不能是空的"
 
-#: Final.py:2194
+#: Final.py:2212
 msgid "OK"
 msgstr "確認"
 
-#: Final.py:2198
+#: Final.py:2216
 msgid "Cancel"
 msgstr "取消"
 
-#: Final.py:2247
+#: Final.py:2265
 msgid "➕ Add to Preset"
 msgstr "➕ 新增為預置配裝"
 
-#: Final.py:2316
+#: Final.py:2334
 msgid "📁 Saved Presets"
 msgstr "📁 已儲存的預置配裝"
 
-#: Final.py:2381
+#: Final.py:2399
 #, python-brace-format
 msgid "✅ Unlocked ({relic_count}/6 relics)"
 msgstr "✅ 已解鎖 ({relic_count}/6 遺物)"
 
-#: Final.py:2392
+#: Final.py:2410
 #, python-brace-format
 msgid "⚠️ Locked (Unlock Flag: {unlock_flag})"
 msgstr "⚠️ 未解鎖 (Unlock Flag: {unlock_flag})"
 
-#: Final.py:2771
+#: Final.py:2789
 msgid "⚙️ Equip Preset"
 msgstr "⚙️ 裝備"
 
-#: Final.py:2778
+#: Final.py:2796
 msgid "✏️ Edit Preset"
 msgstr "✏️ 編輯"
 
-#: Final.py:2814
+#: Final.py:2832
 msgid "No saved presets for this character"
 msgstr "此角色還沒有設定任何預置配裝"
 
-#: Final.py:4491
+#: Final.py:4509
 msgid "➕ Add Relic"
 msgstr "➕ 新增遺物"
 
-#: Final.py:4497
+#: Final.py:4515
 msgid "🔄 Refresh Inventory"
 msgstr "🔄 重新整理物品欄"
 
-#: Final.py:4503
+#: Final.py:4521
 msgid "📤 Export to Excel"
 msgstr "📤 匯出至 Excel"
 
-#: Final.py:4509
+#: Final.py:4527
 msgid "📥 Import from Excel"
 msgstr "📥 從 Excel 匯入"
 
-#: Final.py:4518
+#: Final.py:4536
 msgid "🗑️ Delete All Illegal"
 msgstr "🗑️ 刪除所有非法遺物"
 
-#: Final.py:4527
+#: Final.py:4545
 msgid "🗑️ Mass Delete Selected"
 msgstr "🗑️ 批量刪除已選項目"
 
-#: Final.py:4533
+#: Final.py:4551
 msgid "🔧 Mass Fix"
 msgstr "🔧 批量修正"
 
-#: Final.py:4550
+#: Final.py:4568
 msgid "Blue = Illegal Unique"
 msgstr "藍色 = 非法獨特遺物"
 
-#: Final.py:4556
+#: Final.py:4574
 msgid "Red = Illegal"
 msgstr "紅色 = 非法遺物"
 
-#: Final.py:4562
+#: Final.py:4580
 msgid "Purple = Missing Curse"
 msgstr "紫色 = 缺少詛咒"
 
-#: Final.py:4570
+#: Final.py:4588
 msgid "Orange = Unique Relic (don't edit)"
 msgstr "橙色 = 獨特遺物（請勿編輯）"
 
-#: Final.py:4576
+#: Final.py:4594
 msgid "Teal = Strict Invalid"
 msgstr "青綠色 = 嚴格無效"
 
-#: Final.py:4584
+#: Final.py:4602
 msgid "🔍 Search:"
 msgstr "🔍 搜尋："
 
-#: Final.py:4596
+#: Final.py:4614
 msgid "in:"
 msgstr "從:"
 
-#: Final.py:4621
+#: Final.py:4639
 msgid "Clear"
 msgstr "清除"
 
-#: Final.py:4628
+#: Final.py:4646
 msgid "👤 Char:"
 msgstr "👤 角色："
 
-#: Final.py:4646
+#: Final.py:4664
 msgid "🎨 Color:"
 msgstr "🎨 顏色："
 
-#: Final.py:4664
+#: Final.py:4682
 msgid "⚠️ Status:"
 msgstr "⚠️ 狀態："
 
-#: Final.py:4790
+#: Final.py:4808
 msgid "Modify Selected"
 msgstr "修改選取項目"
 
-#: Final.py:4798
+#: Final.py:4816
 msgid "Delete Selected"
 msgstr "刪除已選項目"
 
-#: Final.py:4808
+#: Final.py:4826
 msgid "Select All"
 msgstr "全選"
 
-#: Final.py:4813
+#: Final.py:4831
 msgid "Deselect All"
 msgstr "取消全選"
 
-#: Final.py:4827
+#: Final.py:4845
 #, python-brace-format
 msgid "{selected_count} selected"
 msgstr "已選擇{selected_count}個"
+
+#~ msgid "Reduce Message Pop"
+#~ msgstr "減少訊息彈出"
