@@ -1,6 +1,11 @@
+import locale
 from pathlib import Path
 import os
 import time
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 # Global variables
@@ -77,3 +82,27 @@ def get_now_timestamp():
     now_unix = time.time()
     filetime_long = int((now_unix + EPOCH_OFFSET) * 1000) * 10000
     return filetime_long
+
+
+def get_system_language():
+    logger.info("Getting system language...")
+    lang = None
+
+    try:
+        lang, _ = locale.getdefaultlocale()
+    except Exception:
+        logger.warning("Failed to get system language. Return Default: en_US")
+        return "en_US"
+
+    if lang:
+        logger.info(f"System language: {lang}")
+        normalized = locale.normalize(lang)
+        clean_lang = normalized.split('.')[0]
+        clean_lang = clean_lang.replace('-', '_')
+        if clean_lang in LANGUAGE_MAP:
+            logger.info(f"Cleaned language: {clean_lang}")
+            return clean_lang
+        else:
+            logger.warning(f"Unsupport language: {clean_lang}. Return Default: en_US")
+            return "en_US"
+    return "en_US"
