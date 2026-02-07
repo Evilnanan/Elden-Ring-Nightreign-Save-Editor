@@ -1978,6 +1978,24 @@ class SaveEditorGUI:
         self.theme_combobox.set("Dark")
         self.theme_combobox.grid(row=0, column=1, sticky="nsew", padx=2)
         self.theme_combobox.bind("<<ComboboxSelected>>", self.on_theme_change)
+        # ===========Checkbox: Reduce Message Pop==============
+        reduce_msg_frame = ttk.Frame(setting_frame)
+        self.reduce_msg_var = tk.BooleanVar(value=self.config.reduce_message_pop)
+
+        def on_reduce_msg_change():
+            self.config.reduce_message_pop = self.reduce_msg_var.get()
+
+        check_reduce = ttk.Checkbutton(
+            reduce_msg_frame,
+            text="Reduce Message Pop",
+            offvalue=False,
+            onvalue=True,
+            command=on_reduce_msg_change,
+            variable=self.reduce_msg_var
+        )
+        lang_mgr.register(check_reduce, N_("Reduce Message Pop: This will remove certain potentially unnecessary success messages."))
+        check_reduce.pack(anchor="center", padx=5, pady=5)
+        reduce_msg_frame.pack(fill="x", padx=10, pady=5)
 
         # Stats section
         stats_frame = ttk.LabelFrame(
