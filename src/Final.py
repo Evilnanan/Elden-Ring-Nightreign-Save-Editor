@@ -1080,8 +1080,8 @@ class ColorTheme:
     def __init__(self):
         if self._initialized:
             return
-
-        self._mode = "dark"
+        _config = ConfigManager()
+        self._mode = _config.theme.lower()
         self._style = None
         self._setup_palettes()
         self._initialized = True
@@ -1960,7 +1960,7 @@ class SaveEditorGUI:
         self.lang_combobox = ttk.Combobox(
             lang_frame, values=lang_display_names, state="readonly", width=15
         )
-        self.lang_combobox.set(LANGUAGE_MAP.get(get_system_language()))
+        self.lang_combobox.set(LANGUAGE_MAP.get(self.config.language))
         self.lang_combobox.grid(row=0, column=1, sticky="nsew", padx=2)
         self.lang_combobox.bind("<<ComboboxSelected>>", self.on_language_change)
         # ============Theme Combobox===========================
@@ -1975,7 +1975,7 @@ class SaveEditorGUI:
         self.theme_combobox = ttk.Combobox(
             theme_frame, values=["Light", "Dark"], state="readonly", width=15
         )
-        self.theme_combobox.set("Dark")
+        self.theme_combobox.set(self.config.theme)
         self.theme_combobox.grid(row=0, column=1, sticky="nsew", padx=2)
         self.theme_combobox.bind("<<ComboboxSelected>>", self.on_theme_change)
         # ===========Checkbox: Reduce Message Pop==============
@@ -4879,6 +4879,7 @@ class SaveEditorGUI:
             (code for code, name in LANGUAGE_MAP.items() if name == selected_name),
             "en_US",
         )
+        self.config.language = lang_code
         lang_mgr.load_language(lang_code)
         if reload_language(lang_code):
             self.refresh_inventory_and_vessels()
@@ -4888,6 +4889,7 @@ class SaveEditorGUI:
     def on_theme_change(self, event=None):
         _mode = self.theme_combobox.get()
         self.color_theme.set_theme(_mode, self.root)
+        self.config.theme = _mode
         self.refresh_inventory_and_vessels()
 
     def open_file(self):
@@ -5253,7 +5255,7 @@ class SaveEditorGUI:
         """Refresh the inventory UI without heavy loading"""
 
         if globals.data is None:
-            messagebox.showwarning("Warning", "No character loaded")
+            msg_warning("Warning", "No character loaded")
             return
         self.reparse()
         self.refresh_inventory_ui()
@@ -5266,7 +5268,7 @@ class SaveEditorGUI:
         """Reload inventory data from save file and refresh UI"""
 
         if globals.data is None:
-            messagebox.showwarning("Warning", "No character loaded")
+            msg_warning("Warning", "No character loaded")
             return
 
         self.reparse()
