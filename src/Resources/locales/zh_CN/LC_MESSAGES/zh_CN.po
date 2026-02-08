@@ -26,19 +26,19 @@ msgstr "圣杯"
 
 #: Final.py:1907
 msgid "Save File Management"
-msgstr "管理存檔"
+msgstr "存档管理"
 
 #: Final.py:1915
 msgid "Load your Elden Ring NightReign save file to begin editing"
-msgstr "加载您的《艾尔登法环》夜之统治存档文件以开始编辑"
+msgstr "加载您的《艾尔登法环：黑夜君临》存档以开始编辑"
 
 #: Final.py:1921
 msgid "📁 Open Save File"
-msgstr "📁 打开保存文件"
+msgstr "📁 打开存档"
 
 #: Final.py:1929
 msgid "💾 Save Modified File"
-msgstr "💾 保存已修改的文件"
+msgstr "💾 保存存档"
 
 #: Final.py:1937
 msgid "💾 Import save (PC/PS4)"
@@ -60,11 +60,11 @@ msgstr "主题："
 msgid ""
 "Reduce Message Pop: This will remove certain potentially unnecessary success "
 "messages."
-msgstr "减少消息弹出：此操作将移除某些可能不必要的成功提示信息。"
+msgstr "减少弹窗：尽可能减少成功提示信息。"
 
 #: Final.py:2004
 msgid "Character Statistics"
-msgstr "角色统计"
+msgstr "角色档案数据"
 
 #: Final.py:2014
 msgid "Murks:"
@@ -80,15 +80,15 @@ msgstr "为王之证："
 
 #: Final.py:2048
 msgid "🔄 Refresh Stats"
-msgstr "🔄 刷新统计数据"
+msgstr "🔄 刷新数据"
 
 #: Final.py:2055
 msgid "Select Character"
-msgstr "选择角色"
+msgstr "选择角色档案"
 
 #: Final.py:2063
 msgid "Choose a character to load:"
-msgstr "选择要加载的角色："
+msgstr "选择要加载的角色档案："
 
 #: Final.py:2091
 msgid "🔄 Refresh"
@@ -96,11 +96,11 @@ msgstr "🔄 刷新"
 
 #: Final.py:2096
 msgid "💾 Save Loadout"
-msgstr "💾 保存装备配置"
+msgstr "💾 保存配装"
 
 #: Final.py:2101
 msgid "📂 Load Loadout"
-msgstr "📂 装备加载"
+msgstr "📂 加载配装"
 
 #: Final.py:2106
 msgid "Character:"
@@ -108,19 +108,19 @@ msgstr "角色："
 
 #: Final.py:2185
 msgid "New Preset Name"
-msgstr "新预设置名称"
+msgstr "新的预设名称"
 
 #: Final.py:2190
 msgid "Enter name for new preset:"
-msgstr "输入新预设置名称："
+msgstr "输入预设名称："
 
 #: Final.py:2204
 msgid "Preset name cannot be empty"
-msgstr "预设置名称不能为空"
+msgstr "预设名称不能为空"
 
 #: Final.py:2212
 msgid "OK"
-msgstr "好的"
+msgstr "确认"
 
 #: Final.py:2216
 msgid "Cancel"
@@ -128,11 +128,11 @@ msgstr "取消"
 
 #: Final.py:2265
 msgid "➕ Add to Preset"
-msgstr "➕ 添加到预设置"
+msgstr "➕ 添加到预设"
 
 #: Final.py:2334
 msgid "📁 Saved Presets"
-msgstr "📁 已保存的预设"
+msgstr "📁 预设方案"
 
 #: Final.py:2399
 #, python-brace-format
@@ -142,23 +142,23 @@ msgstr "✅ 已解锁 ({relic_count}/6 遗物)"
 #: Final.py:2410
 #, python-brace-format
 msgid "⚠️ Locked (Unlock Flag: {unlock_flag})"
-msgstr "⚠️ 锁定 (Unlock Flag: {unlock_flag})"
+msgstr "⚠️ 未解锁 (Unlock Flag: {unlock_flag})"
 
 #: Final.py:2789
 msgid "⚙️ Equip Preset"
-msgstr "⚙️ 装备此预设置"
+msgstr "⚙️ 装备"
 
 #: Final.py:2796
 msgid "✏️ Edit Preset"
-msgstr "✏️ 编辑预设置"
+msgstr "✏️ 编辑"
 
 #: Final.py:2832
 msgid "No saved presets for this character"
-msgstr "此角色无已保存的预设置"
+msgstr "此角色暂未添加任何预设方案"
 
 #: Final.py:4509
 msgid "➕ Add Relic"
-msgstr "➕ 添加遗物"
+msgstr "➕ 新增遗物"
 
 #: Final.py:4515
 msgid "🔄 Refresh Inventory"
@@ -178,15 +178,15 @@ msgstr "🗑️ 删除所有非法遗物"
 
 #: Final.py:4545
 msgid "🗑️ Mass Delete Selected"
-msgstr "🗑️ 批量删除选定项"
+msgstr "🗑️ 批量删除已选遗物"
 
 #: Final.py:4551
 msgid "🔧 Mass Fix"
-msgstr "🔧 批量修复"
+msgstr "🔧 修正所有非法遗物"
 
 #: Final.py:4568
 msgid "Blue = Illegal Unique"
-msgstr "蓝色 = 非法独特遗物"
+msgstr "蓝色 = 非法商店遗物"
 
 #: Final.py:4574
 msgid "Red = Illegal"
@@ -194,11 +194,11 @@ msgstr "红色 = 非法遗物"
 
 #: Final.py:4580
 msgid "Purple = Missing Curse"
-msgstr "紫色 = 缺少诅咒"
+msgstr "紫色 = 缺少负面"
 
 #: Final.py:4588
 msgid "Orange = Unique Relic (don't edit)"
-msgstr "橙色 = 独特遗物（请勿编辑）"
+msgstr "橙色 = 商店遗物（请勿编辑）"
 
 #: Final.py:4594
 msgid "Teal = Strict Invalid"
@@ -210,7 +210,7 @@ msgstr "🔍 搜索："
 
 #: Final.py:4614
 msgid "in:"
-msgstr "在："
+msgstr "从："
 
 #: Final.py:4639
 msgid "Clear"
@@ -230,11 +230,11 @@ msgstr "⚠️ 状态："
 
 #: Final.py:4808
 msgid "Modify Selected"
-msgstr "修改选定项"
+msgstr "编辑"
 
 #: Final.py:4816
 msgid "Delete Selected"
-msgstr "删除选定项"
+msgstr "删除"
 
 #: Final.py:4826
 msgid "Select All"
@@ -247,4 +247,4 @@ msgstr "取消全选"
 #: Final.py:4845
 #, python-brace-format
 msgid "{selected_count} selected"
-msgstr "{selected_count} 已选中"
+msgstr "已选{selected_count}项"
