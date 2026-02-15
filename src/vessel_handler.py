@@ -766,6 +766,7 @@ class LoadoutHandler:
             if self.heroes[hero_type].cur_vessel_id == vessel_id:
                 self.heroes[hero_type].auto_adjust_cur_equipment()
             self.update_hero_loadout(hero_type)
+            self.parse()
 
     def replace_preset_relic(self, hero_type: int, relic_index: int, new_relic_ga,
                              hero_preset_index: int = -1, preset_index: int = -1):
