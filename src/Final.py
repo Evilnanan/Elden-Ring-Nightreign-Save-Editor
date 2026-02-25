@@ -7848,11 +7848,11 @@ class ModifyRelicDialog:
                     | (_effect_params_df["compatibilityId"] != _conflic_id)
                 ]
             _items = _effect_params_df.index.tolist()
+
+            # Add "Empty" effect at the top
+            _items.insert(0, 0xFFFFFFFF)
         else:
             _items = [int(k) for k in self.game_data.effects.keys()]
-
-        # Add "No Curse (Empty)" option at the top
-        _items.insert(0, 0xFFFFFFFF)
 
         # Build dialog title with relic type info in safe mode
         if self.safe_mode_var.get():
