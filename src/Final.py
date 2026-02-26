@@ -6143,27 +6143,73 @@ class SaveEditorGUI:
                 "Warning", "No save file loaded. Please open a save file first."
             )
             return
+        
+        # 弹出数量输入对话框
+        count_str = simpledialog.askinteger(
+            "Add Relics",
+            "Enter number of relics to add (1-1000):",
+            minvalue=1,
+            maxvalue=1000,
+            initialvalue=1
+        )
+        
+        if count_str is None:
+            return
+        
+        count = count_str
+        
         relic_type_selector = RelicTypeSelector(self.root)
         if not relic_type_selector.result:
             return
+        
         try:
-            added_result, new_ga = self.inventory_handler.add_relic_to_inventory(
-                relic_type=relic_type_selector.result
-            )
-            if added_result:
-                msg_info("Success", "Dummy relic added. Refreshing inventory.")
-                self.refresh_inventory_and_vessels()
-                # Find Added item by new_ga
-                for item in self.tree.get_children():
-                    item_ga = int(self.tree.item(item, "tags")[0])
-                    if item_ga == new_ga:
-                        self.tree.selection_set(item)
-                        self.tree.focus(item)
-                        self.tree.see(item)
+            if count == 1:
+                # 原有的单个添加逻辑
+                added_result, new_ga = self.inventory_handler.add_relic_to_inventory(
+                    relic_type=relic_type_selector.result
+                )
+                if added_result:
+                    msg_info("Success", "Dummy relic added. Refreshing inventory.")
+                    self.refresh_inventory_and_vessels()
+                    # Find Added item by new_ga
+                    for item in self.tree.get_children():
+                        item_ga = int(self.tree.item(item, "tags")[0])
+                        if item_ga == new_ga:
+                            self.tree.selection_set(item)
+                            self.tree.focus(item)
+                            self.tree.see(item)
+                            break
+                    self.modify_selected_relic()
+            else:
+                # 批量添加逻辑
+                added_count = 0
+                last_ga = None
+                for _ in range(count):
+                    added_result, new_ga = self.inventory_handler.add_relic_to_inventory(
+                        relic_type=relic_type_selector.result
+                    )
+                    if added_result:
+                        added_count += 1
+                        last_ga = new_ga
+                    else:
                         break
-                self.modify_selected_relic()
+                
+                if added_count > 0:
+                    msg_info("Success", f"{added_count} dummy relic(s) added. Refreshing inventory.")
+                    self.refresh_inventory_and_vessels()
+                    if last_ga is not None:
+                        for item in self.tree.get_children():
+                            item_ga = int(self.tree.item(item, "tags")[0])
+                            if item_ga == last_ga:
+                                self.tree.selection_set(item)
+                                self.tree.focus(item)
+                                self.tree.see(item)
+                                break
+                        self.modify_selected_relic()
+                else:
+                    messagebox.showerror("Error", "Failed to add any relics.")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to add relic: {e}")
+            messagebox.showerror("Error", f"Failed to add relic(s): {e}")
 
     def _find_valid_relic_id_for_effects(self, current_id, effects):
         """Find a valid relic ID that can have the given effects (must be same color)"""
