@@ -6502,8 +6502,8 @@ class ModifyRelicDialog:
                 else:
                     self.effect_name_labels[i].config(text="Unknown Effect")
 
-        # Update curse indicators after loading
-        self._update_curse_indicators()
+        # Update effect indicators after loading
+        self._update_effect_indicators()
 
     def _update_color_display(self):
         """Update the current color label"""
@@ -7324,13 +7324,13 @@ class ModifyRelicDialog:
         # This handles cases where selected effect needs a curse
         self._auto_find_valid_relic_id()
 
-        # Update curse indicators when effect or curse slots change
-        self._update_curse_indicators()
+        # Update effect indicators when effect or curse slots change
+        self._update_effect_indicators()
 
         self.update_debug_info()
 
-    def _update_curse_indicators(self):
-        """Update curse slot labels to show which ones NEED to be filled"""
+    def _update_effect_indicators(self):
+        """Update effect slot labels to show validation status"""
         effect_labels_base = [
             "Effect 1",
             "Effect 2",
@@ -7351,6 +7351,35 @@ class ModifyRelicDialog:
                 effect_id = 0
                 curse_id = 0
 
+            base_effect_label = effect_labels_base[effect_idx]
+
+            # Check compatibility with other slots
+            for j in range(3):
+                if i == j:
+                    continue
+
+                try:
+                    effect_id2 = int(self.effect_entries[j].get())
+                except ValueError:
+                    effect_id2 = 0
+
+                conflict_id1 = self.game_data.effects[effect_id].conflict_id
+                conflict_id2 = self.game_data.effects[effect_id2].conflict_id
+
+                if conflict_id1 == -1 or conflict_id2 == -1:
+                    continue
+
+                if conflict_id1 == conflict_id2:
+                    self.slot_labels[effect_idx].config(
+                        text=f"⚠️ {base_effect_label} (Conflicts with Effect {j+1}):",
+                        foreground="red",
+                    )
+                    break
+            else:
+                self.slot_labels[effect_idx].config(
+                    text=f"{base_effect_label}:", foreground="black"
+                )
+
             # Check if this effect needs a curse
             needs_curse = False
             has_curse = curse_id not in [0, -1, 4294967295]
@@ -7359,26 +7388,27 @@ class ModifyRelicDialog:
                 needs_curse = self.game_data.effect_needs_curse(effect_id)
 
             # Update the curse slot label
-            base_label = effect_labels_base[curse_idx]
+            base_curse_label = effect_labels_base[curse_idx]
             if needs_curse and not has_curse:
                 # Needs curse but doesn't have one - show warning
                 self.slot_labels[curse_idx].config(
-                    text=f"⚠️ {base_label} (REQUIRED):", foreground="red"
+                    text=f"⚠️ {base_curse_label} (REQUIRED):", foreground="red"
                 )
             elif needs_curse and has_curse:
                 # Needs curse and has one - show satisfied
                 self.slot_labels[curse_idx].config(
-                    text=f"✓ {base_label}:", foreground="green"
+                    text=f"✓ {base_curse_label}:", foreground="green"
                 )
             elif not needs_curse and has_curse:
                 # Doesn't need curse but has one - ILLEGAL
                 self.slot_labels[curse_idx].config(
-                    text=f"⛔ {base_label} (ILLEGAL - remove curse):", foreground="red"
+                    text=f"⛔ {base_curse_label} (ILLEGAL - remove curse):",
+                    foreground="red",
                 )
             else:
                 # Doesn't need curse and doesn't have one - correct
                 self.slot_labels[curse_idx].config(
-                    text=f"{base_label} (not needed):", foreground="gray"
+                    text=f"{base_curse_label} (not needed):", foreground="gray"
                 )
 
     def search_items(self):
@@ -7868,7 +7898,6 @@ class ModifyRelicDialog:
             if not _pool_effects:
                 # Slot is disabled and no alternatives available
                 slot_type = "effect" if effect_index < 3 else "curse"
-                slot_num = (effect_index % 3) + 1
                 self.effect_entries[effect_index].delete(0, tk.END)
                 self.effect_entries[effect_index].insert(0, str(0xFFFFFFFF))
                 self.on_effect_change(effect_index)
@@ -7884,22 +7913,29 @@ class ModifyRelicDialog:
                 _effect_params_df.index.isin(_pool_effects)
             ]
 
-            # Filter out conflicting effects
+            _items = _effect_params_df.index.tolist()
+            _warned_items = []
+            # Warn conflicting effects
             for i in range(3) if not is_curse_slot else range(3, 6):
                 if i == effect_index:
                     continue
                 _effect_id = int(self.effect_entries[i].get())
                 _conflic_id = self.game_data.effects[_effect_id].conflict_id
-                _effect_params_df = _effect_params_df[
+                _compatible_effect_params_df = _effect_params_df[
                     (_effect_params_df["compatibilityId"] == -1)
                     | (_effect_params_df["compatibilityId"] != _conflic_id)
                 ]
-            _items = _effect_params_df.index.tolist()
+                _compatible_items = _compatible_effect_params_df.index.tolist()
+                _warned_items.extend(
+                    item for item in _items if item not in _compatible_items
+                )
+            _warned_items = list(set(_warned_items))  # Remove duplicates
 
             # Add "Empty" effect at the top
             _items.insert(0, 0xFFFFFFFF)
         else:
             _items = [int(k) for k in self.game_data.effects.keys()]
+            _warned_items = []
 
         # Build dialog title with slot type in safe mode
         if self.safe_mode_var.get():
@@ -7915,6 +7951,7 @@ class ModifyRelicDialog:
             _items,
             dialog_title,
             lambda item_id: self.on_effect_selected(effect_index, item_id),
+            _warned_items,
         )
 
     def on_item_selected(self, item_id):
@@ -8015,8 +8052,18 @@ class SearchDialog:
     game_data: Optional[SourceDataHandler] = None
     relic_checker: Optional[RelicChecker] = None
 
-    def __init__(self, parent, item_id, search_type, id_list, title, callback):
+    def __init__(
+        self,
+        parent,
+        item_id,
+        search_type,
+        id_list,
+        title,
+        callback,
+        warned_id_list: list[int] | None = None,
+    ):
         self.id_list = id_list
+        self.warned_id_list = [] if warned_id_list is None else warned_id_list
         self.callback = callback
         self.search_type = search_type
         self.item_id = item_id
@@ -8258,6 +8305,27 @@ class SearchDialog:
             side="right", padx=5
         )
 
+    @staticmethod
+    def to_halfwidth(text: str):
+        fullwidth_to_halfwidth = {
+            "０": "0",
+            "１": "1",
+            "２": "2",
+            "３": "3",
+            "４": "4",
+            "５": "5",
+            "６": "6",
+            "７": "7",
+            "８": "8",
+            "９": "9",
+            "＋": "+",
+        }
+
+        def replace(match):
+            return fullwidth_to_halfwidth.get(match.group(0), match.group(0))
+
+        return re.sub(r"[０-９]", replace, text)
+
     def filter_results(self):
         search_term = self.search_var.get().lower()
 
@@ -8296,8 +8364,18 @@ class SearchDialog:
                     if self.curse_slots_var.get() != str(curse_slots):
                         continue
 
-            if search_term in name.lower() or search_term in item_id:
-                self.listbox.insert(tk.END, f"{name} (ID: {item_id})")
+            sub_terms = search_term.split(" ")
+            for sub_term in sub_terms:
+                if sub_term in self.to_halfwidth(name.lower()):
+                    continue
+                if sub_term in item_id:
+                    continue
+                break
+            else:
+                self.listbox.insert(
+                    tk.END,
+                    f"{'⚠️ '*(int(item_id) in self.warned_id_list)}{name} (ID: {item_id})",
+                )
 
     def on_select(self, event=None):
         selection = self.listbox.curselection()
